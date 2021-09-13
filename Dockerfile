@@ -15,22 +15,16 @@ RUN --mount=type=cache,target=/root/.cargo/git \
 
 RUN strip --strip-all /root/.cargo/bin/marmalade
 
-FROM alpine:3.14 as git
+FROM alpine:3.14
 
-WORKDIR /volume
-
-RUN apk add --no-cache autoconf curl gcc make musl-dev tar zlib-dev zlib-static \
-    && curl -Lo- https://git.kernel.org/pub/scm/git/git.git/snapshot/git-2.33.0.tar.gz | tar -xz --strip-components=1 \
-    && make configure \
-    && ./configure CFLAGS="-O2 -static" LDFLAGS="-s" --without-openssl --without-libpcre2 --without-curl --without-expat --without-tcltk \
-    && make -j $(nproc) git-receive-pack git-upload-pack
-
-FROM scratch
+RUN apk add --no-cache git=2.32.0-r0 \
+    && addgroup -g 1000 marmelade \
+    && adduser -u 1000 -G me -D -g '' -H -h /dev/null -s /sbin/nologin marmelade
 
 COPY --from=builder /root/.cargo/bin/marmalade /bin/
-COPY --from=git /volume/git-receive-pack /volume/git-upload-pack /bin/
 
 EXPOSE 8080
 STOPSIGNAL SIGINT
+USER marmelade
 
 ENTRYPOINT ["/bin/marmalade"]

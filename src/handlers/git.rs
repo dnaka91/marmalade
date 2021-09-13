@@ -1,5 +1,3 @@
-#![allow(clippy::unused_async)]
-
 use std::{
     io::{Error as IoError, ErrorKind},
     process::Stdio,
@@ -14,47 +12,15 @@ use axum::{
 use camino::Utf8PathBuf;
 use futures_util::TryStreamExt;
 use serde::Deserialize;
-use tokio::process::Command;
+use tokio::{fs, process::Command};
 use tokio_util::io::{ReaderStream, StreamReader};
 use tracing::{error, info};
-
-use crate::{response::HtmlTemplate, templates};
-
-pub async fn hello() -> impl IntoResponse {
-    HtmlTemplate(templates::Index)
-}
-
-pub async fn favicon_32() -> impl IntoResponse {
-    include_bytes!("../assets/favicon-32x32.png").as_ref()
-}
-
-pub async fn favicon_16() -> impl IntoResponse {
-    include_bytes!("../assets/favicon-16x16.png").as_ref()
-}
-
-#[derive(Debug, Deserialize)]
-pub struct InfoRefsParams {
-    user: String,
-    repo: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct InfoRefsQuery {
-    service: GitService,
-}
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GitService {
     GitReceivePack,
     GitUploadPack,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PackParams {
-    user: String,
-    repo: String,
-    service: GitService,
 }
 
 impl GitService {
@@ -87,7 +53,18 @@ impl GitService {
     }
 }
 
-pub async fn git_info_refs(
+#[derive(Debug, Deserialize)]
+pub struct InfoRefsParams {
+    user: String,
+    repo: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InfoRefsQuery {
+    service: GitService,
+}
+
+pub async fn info_refs(
     Path(params): Path<InfoRefsParams>,
     Query(query): Query<InfoRefsQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -99,7 +76,7 @@ pub async fn git_info_refs(
         params.repo.strip_suffix(".git").unwrap_or(&params.repo)
     ));
 
-    if tokio::fs::metadata(&path).await.is_err() {
+    if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);
     }
 
@@ -125,7 +102,14 @@ pub async fn git_info_refs(
         .unwrap())
 }
 
-pub async fn git_pack(
+#[derive(Debug, Deserialize)]
+pub struct PackParams {
+    user: String,
+    repo: String,
+    service: GitService,
+}
+
+pub async fn pack(
     Path(params): Path<PackParams>,
     body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -137,7 +121,7 @@ pub async fn git_pack(
         params.repo.strip_suffix(".git").unwrap_or(&params.repo)
     ));
 
-    if tokio::fs::metadata(&path).await.is_err() {
+    if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);
     }
 

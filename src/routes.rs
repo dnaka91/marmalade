@@ -18,6 +18,16 @@ pub fn build(settings: GlobalSettings) -> Router<BoxRoute> {
                 .route("/:service", post(handlers::git::pack))
                 .route("/info/refs", get(handlers::git::info_refs)),
         )
+        .route("/show", get(handlers::auth::show))
+        .route(
+            "/register",
+            get(handlers::auth::register).post(handlers::auth::register_post),
+        )
+        .route("/logout", post(handlers::auth::logout))
+        .route(
+            "/login",
+            get(handlers::auth::login).post(handlers::auth::login_post),
+        )
         .route("/", get(handlers::hello))
         .layer(
             ServiceBuilder::new()

@@ -10,9 +10,14 @@ use tokio::signal;
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
+mod cookies;
+mod extract;
 mod handlers;
+mod models;
+mod repositories;
 mod response;
 mod routes;
+mod session;
 mod settings;
 mod templates;
 

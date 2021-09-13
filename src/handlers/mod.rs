@@ -4,6 +4,7 @@ use axum::response::IntoResponse;
 
 use crate::{response::HtmlTemplate, templates};
 
+pub mod auth;
 pub mod git;
 
 pub async fn hello() -> impl IntoResponse {

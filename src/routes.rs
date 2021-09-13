@@ -11,8 +11,7 @@ pub fn build(settings: GlobalSettings) -> Router<BoxRoute> {
         .nest(
             "/:user/:repo",
             Router::new()
-                .route("/git-receive-pack", post(handlers::git_receive_pack))
-                .route("/git-upload-pack", post(handlers::git_upload_pack))
+                .route("/:service", post(handlers::git_pack))
                 .route("/info/refs", get(handlers::git_info_refs)),
         )
         .route("/", get(handlers::hello))

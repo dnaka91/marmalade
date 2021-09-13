@@ -1,5 +1,6 @@
 #![allow(clippy::unused_async)]
 
+use std::io::{Error as IoError, ErrorKind};
 use std::process::Stdio;
 
 use axum::{
@@ -9,10 +10,11 @@ use axum::{
     response::IntoResponse,
 };
 use camino::Utf8PathBuf;
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use serde::Deserialize;
-use tokio::{io::AsyncWriteExt, process::Command};
-use tokio_util::io::ReaderStream;
+use tokio::process::Command;
+use tokio_util::io::{ReaderStream, StreamReader};
+use tracing::error;
 use tracing::info;
 
 use crate::{response::HtmlTemplate, templates};
@@ -30,30 +32,64 @@ pub async fn favicon_16() -> impl IntoResponse {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GitInfoRefsParams {
+pub struct InfoRefsParams {
     user: String,
     repo: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GitInfoRefsQuery {
+pub struct InfoRefsQuery {
     service: GitService,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GitService {
     GitReceivePack,
     GitUploadPack,
 }
 
-pub async fn git_info_refs(
-    Path(params): Path<GitInfoRefsParams>,
-    Query(query): Query<GitInfoRefsQuery>,
-) -> Result<impl IntoResponse, StatusCode> {
-    const BODY_HEADER_RECEIVE: &str = "001f# service=git-receive-pack\n0000";
-    const BODY_HEADER_UPLOAD: &str = "001e# service=git-upload-pack\n0000";
+#[derive(Debug, Deserialize)]
+pub struct PackParams {
+    user: String,
+    repo: String,
+    service: GitService,
+}
 
+impl GitService {
+    const fn command(self) -> &'static str {
+        match self {
+            Self::GitReceivePack => "git-receive-pack",
+            Self::GitUploadPack => "git-upload-pack",
+        }
+    }
+
+    const fn advertise_header(self) -> &'static str {
+        match self {
+            Self::GitReceivePack => "001f# service=git-receive-pack\n0000",
+            Self::GitUploadPack => "001e# service=git-upload-pack\n0000",
+        }
+    }
+
+    const fn content_type(self, advertise: bool) -> &'static str {
+        if advertise {
+            match self {
+                Self::GitReceivePack => "application/x-git-receive-pack-advertisement",
+                Self::GitUploadPack => "application/x-git-upload-pack-advertisement",
+            }
+        } else {
+            match self {
+                Self::GitReceivePack => "application/x-git-receive-pack-result",
+                Self::GitUploadPack => "application/x-git-upload-pack-result",
+            }
+        }
+    }
+}
+
+pub async fn git_info_refs(
+    Path(params): Path<InfoRefsParams>,
+    Query(query): Query<InfoRefsQuery>,
+) -> Result<impl IntoResponse, StatusCode> {
     info!(user = ?params.user, repo = ?params.repo, "got request");
 
     let path = Utf8PathBuf::from(format!(
@@ -66,45 +102,31 @@ pub async fn git_info_refs(
         return Err(StatusCode::NOT_FOUND);
     }
 
-    let command = match query.service {
-        GitService::GitReceivePack => "git-receive-pack",
-        GitService::GitUploadPack => "git-upload-pack",
-    };
-
-    let output = Command::new(command)
+    let output = Command::new(query.service.command())
         .arg("--advertise-refs")
         .arg(path)
         .output()
         .await
-        .unwrap();
+        .map_err(|error| {
+            error!(command=?query.service.command(), ?error, "failed running command");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
-    let header = match query.service {
-        GitService::GitReceivePack => BODY_HEADER_RECEIVE,
-        GitService::GitUploadPack => BODY_HEADER_UPLOAD,
-    };
-
-    let mut body = Vec::with_capacity(output.stdout.len() + header.len());
+    let header = query.service.advertise_header();
+    let mut body = Vec::with_capacity(header.len() + output.stdout.len());
     body.extend(header.as_bytes());
     body.extend(output.stdout);
 
-    let temp = String::from_utf8_lossy(&body);
-    info!("ran {}:\n{}", command, temp);
-
-    let content_type = match query.service {
-        GitService::GitReceivePack => "application/x-git-receive-pack-advertisement",
-        GitService::GitUploadPack => "application/x-git-upload-pack-advertisement",
-    };
-
     Ok(Response::builder()
-        .header("Content-Type", content_type)
+        .header("Content-Type", query.service.content_type(true))
         .header("Cache-Control", "no-cache")
         .body(Full::from(body))
         .unwrap())
 }
 
-pub async fn git_receive_pack(
-    Path(params): Path<GitInfoRefsParams>,
-    mut body: Body,
+pub async fn git_pack(
+    Path(params): Path<PackParams>,
+    body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(user = ?params.user, repo = ?params.repo, "got request");
 
@@ -118,77 +140,40 @@ pub async fn git_receive_pack(
         return Err(StatusCode::NOT_FOUND);
     }
 
-    let mut process = Command::new("git-receive-pack")
+    let mut process = Command::new(params.service.command())
         .arg("--stateless-rpc")
         .arg(path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
-        .unwrap();
+        .map_err(|error| {
+            error!(command = ?params.service.command(),?error,"failed spawning command");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
+    // Unwrap: safe to unwrap as we configured stdin & stdout as piped,
+    // thus being always present.
     let mut stdin = process.stdin.take().unwrap();
     let stdout = process.stdout.take().unwrap();
 
     tokio::spawn(async move {
-        while let Some(value) = body.next().await {
-            let mut value = value.unwrap();
+        let body = body.map_err(|e| IoError::new(ErrorKind::Other, e));
+        let mut body = StreamReader::new(body);
 
-            stdin.write_all_buf(&mut value).await.unwrap();
+        if let Err(error) = tokio::io::copy(&mut body, &mut stdin).await {
+            error!(?error, "failed copying request body to command");
+            return;
         }
 
-        process.wait().await.unwrap();
+        if let Err(error) = process.wait().await {
+            error!(?error, "failed completing command");
+        }
     });
 
     let body = Body::wrap_stream(ReaderStream::new(stdout));
 
     Ok(Response::builder()
-        .header("Content-Type", "application/x-git-receive-pack-result")
-        .header("Cache-Control", "no-cache")
-        .body(body)
-        .unwrap())
-}
-
-pub async fn git_upload_pack(
-    Path(params): Path<GitInfoRefsParams>,
-    mut body: Body,
-) -> Result<impl IntoResponse, StatusCode> {
-    info!(user = ?params.user, repo = ?params.repo, "got request");
-
-    let path = Utf8PathBuf::from(format!(
-        "temp/{}/{}",
-        params.user,
-        params.repo.strip_suffix(".git").unwrap_or(&params.repo)
-    ));
-
-    if tokio::fs::metadata(&path).await.is_err() {
-        return Err(StatusCode::NOT_FOUND);
-    }
-
-    let mut process = Command::new("git-upload-pack")
-        .arg("--stateless-rpc")
-        .arg(path)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    let mut stdin = process.stdin.take().unwrap();
-    let stdout = process.stdout.take().unwrap();
-
-    tokio::spawn(async move {
-        while let Some(value) = body.next().await {
-            let mut value = value.unwrap();
-
-            stdin.write_all_buf(&mut value).await.unwrap();
-        }
-
-        process.wait().await.unwrap();
-    });
-
-    let body = Body::wrap_stream(ReaderStream::new(stdout));
-
-    Ok(Response::builder()
-        .header("Content-Type", "application/x-git-upload-pack-result")
+        .header("Content-Type", params.service.content_type(false))
         .header("Cache-Control", "no-cache")
         .body(body)
         .unwrap())

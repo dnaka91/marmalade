@@ -1,4 +1,8 @@
-use axum::{AddExtensionLayer, Router, handler::{get, post}, routing::BoxRoute};
+use axum::{
+    handler::{get, post},
+    routing::BoxRoute,
+    AddExtensionLayer, Router,
+};
 use tower::ServiceBuilder;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 

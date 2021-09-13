@@ -1,7 +1,9 @@
 #![allow(clippy::unused_async)]
 
-use std::io::{Error as IoError, ErrorKind};
-use std::process::Stdio;
+use std::{
+    io::{Error as IoError, ErrorKind},
+    process::Stdio,
+};
 
 use axum::{
     body::{Body, Full},
@@ -14,8 +16,7 @@ use futures_util::TryStreamExt;
 use serde::Deserialize;
 use tokio::process::Command;
 use tokio_util::io::{ReaderStream, StreamReader};
-use tracing::error;
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{response::HtmlTemplate, templates};
 

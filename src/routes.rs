@@ -1,5 +1,5 @@
 use axum::{
-    handler::{get, post},
+    handler::{get, post, Handler},
     routing::BoxRoute,
     AddExtensionLayer, Router,
 };
@@ -29,6 +29,7 @@ pub fn build(settings: GlobalSettings) -> Router<BoxRoute> {
             get(handlers::auth::login).post(handlers::auth::login_post),
         )
         .route("/", get(handlers::hello))
+        .or(handlers::handle_404.into_service())
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())

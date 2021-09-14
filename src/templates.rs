@@ -1,4 +1,5 @@
 use askama::Template;
+use axum::http::StatusCode;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -20,4 +21,12 @@ pub struct Register;
 #[template(path = "show.html")]
 pub struct Show {
     pub username: Option<String>,
+}
+
+#[derive(Template)]
+#[template(path = "error.html")]
+pub struct Error {
+    pub emoji: char,
+    pub code: StatusCode,
+    pub message: Option<&'static str>,
 }

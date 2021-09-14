@@ -15,7 +15,7 @@
             <div class="notification is-danger is-light">
               {{ msg }}
             </div>
-            {% when None %}
+            {%- when None -%}
             {% endmatch %}
 
             <form method="POST" action="/login">

@@ -8,7 +8,7 @@ use axum::{
 };
 use tracing::error;
 
-use crate::cookies::Cookies;
+use crate::{cookies::Cookies, templates};
 
 pub struct HtmlTemplate<T>(pub T);
 
@@ -30,6 +30,28 @@ where
                     .unwrap()
             }
         }
+    }
+}
+
+pub struct StatusTemplate(pub char, pub StatusCode);
+
+impl IntoResponse for StatusTemplate {
+    type Body = Full<Bytes>;
+    type BodyError = Infallible;
+
+    fn into_response(self) -> Response<Self::Body> {
+        let mut res = HtmlTemplate(templates::Error {
+            emoji: self.0,
+            code: self.1,
+            message: None,
+        })
+        .into_response();
+
+        if res.status() != StatusCode::INTERNAL_SERVER_ERROR {
+            *res.status_mut() = self.1;
+        }
+
+        res
     }
 }
 

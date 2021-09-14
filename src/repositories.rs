@@ -5,13 +5,11 @@ use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use tokio::fs;
 use uuid::Uuid;
 
-use crate::models::UserAccount;
-
-const BASE_PATH: &str = "temp";
+use crate::{dirs::DIRS, models::UserAccount};
 
 pub struct UserRepository<'a> {
     username: &'a str,
@@ -21,7 +19,7 @@ pub struct UserRepository<'a> {
 
 impl<'a> UserRepository<'a> {
     pub fn for_user(username: &'a str) -> Self {
-        let user_path = Utf8Path::new(BASE_PATH).join(username);
+        let user_path = DIRS.data_dir().join(username);
         let user_file = user_path.join("user.json");
 
         Self {
@@ -86,7 +84,7 @@ impl<'a> UserRepository<'a> {
 }
 
 async fn edit_tokens(username: &str, edit: impl Fn(&mut HashSet<Uuid>)) -> Result<()> {
-    let user_path = Utf8Path::new(BASE_PATH).join(username);
+    let user_path = DIRS.data_dir().join(username);
     let real_file = user_path.join("tokens.json");
     let temp_file = user_path.join("~tokens.json");
 

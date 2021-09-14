@@ -78,15 +78,36 @@ pub async fn show(user: User) -> impl IntoResponse {
     HtmlTemplate(templates::Show { username })
 }
 
-pub async fn register() -> impl IntoResponse {
-    HtmlTemplate(templates::Register)
+pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
+    let message = cookies
+        .get(COOKIE_ERROR)
+        .map(|cookie| cookie.value() == "register_exists")
+        .and_then(|error| error.then(|| "The username is not available"));
+
+    if message.is_some() {
+        cookies.remove(COOKIE_ERROR);
+    }
+
+    SetCookies::new(HtmlTemplate(templates::Register { message }), cookies)
 }
 
-pub async fn register_post(Form(login): Form<Login>) -> impl IntoResponse {
+pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
     info!(?login.username, ?login.password, "got register request");
 
     let user_repo = UserRepository::for_user(&login.username);
-    let exists = user_repo.create_user(&login.password, false).await.unwrap();
+    let created = user_repo.create_user(&login.password, false).await.unwrap();
 
-    Redirect::to("/".parse().unwrap())
+    if created {
+        let new_token = Uuid::new_v4();
+        user_repo.add_token(new_token).await.unwrap();
+
+        cookies.add(Cookie::new(COOKIE_SESSION, new_token.to_string()));
+        cookies.add(Cookie::new(COOKIE_USERNAME, login.username));
+
+        SetCookies::new(Redirect::to("/".parse().unwrap()), cookies)
+    } else {
+        cookies.add(Cookie::new(COOKIE_ERROR, "register_exists"));
+
+        SetCookies::new(Redirect::to("/register".parse().unwrap()), cookies)
+    }
 }

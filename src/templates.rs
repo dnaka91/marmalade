@@ -15,7 +15,9 @@ pub struct Login {
 
 #[derive(Template)]
 #[template(path = "register.html")]
-pub struct Register;
+pub struct Register {
+    pub message: Option<&'static str>,
+}
 
 #[derive(Template)]
 #[template(path = "show.html")]

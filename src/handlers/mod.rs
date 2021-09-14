@@ -2,7 +2,11 @@
 
 use axum::{http::StatusCode, response::IntoResponse};
 
-use crate::{extract::User, response::{HtmlTemplate, StatusTemplate}, templates};
+use crate::{
+    extract::User,
+    response::{HtmlTemplate, StatusTemplate},
+    templates,
+};
 
 pub mod auth;
 pub mod git;

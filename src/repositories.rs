@@ -17,6 +17,7 @@ pub struct UserRepository;
 
 impl UserRepository {
     pub async fn create_user(&self, username: &str, password: &str, admin: bool) -> Result<bool> {
+        let user_path = Utf8Path::new(BASE_PATH).join(username);
         let user_file = Utf8Path::new(BASE_PATH).join(username).join("user.json");
 
         if fs::metadata(&user_file).await.is_ok() {
@@ -29,6 +30,7 @@ impl UserRepository {
             admin,
         })?;
 
+        fs::create_dir_all(user_path).await?;
         fs::write(user_file, data).await?;
 
         Ok(true)

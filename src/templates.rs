@@ -9,6 +9,10 @@ pub struct Index;
 pub struct Login;
 
 #[derive(Template)]
+#[template(path = "register.html")]
+pub struct Register;
+
+#[derive(Template)]
 #[template(path = "show.html")]
 pub struct Show {
     pub username: Option<String>,

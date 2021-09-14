@@ -71,7 +71,7 @@ pub async fn show(user: User) -> impl IntoResponse {
 }
 
 pub async fn register() -> impl IntoResponse {
-    StatusCode::NOT_IMPLEMENTED
+    HtmlTemplate(templates::Register)
 }
 
 pub async fn register_post(Form(login): Form<Login>) -> impl IntoResponse {

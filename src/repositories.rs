@@ -5,7 +5,7 @@ use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use tokio::fs;
 use uuid::Uuid;
 
@@ -13,31 +13,40 @@ use crate::models::UserAccount;
 
 const BASE_PATH: &str = "temp";
 
-pub struct UserRepository;
+pub struct UserRepository<'a> {
+    username: &'a str,
+    user_path: Utf8PathBuf,
+}
 
-impl UserRepository {
-    pub async fn create_user(&self, username: &str, password: &str, admin: bool) -> Result<bool> {
-        let user_path = Utf8Path::new(BASE_PATH).join(username);
-        let user_file = Utf8Path::new(BASE_PATH).join(username).join("user.json");
+impl<'a> UserRepository<'a> {
+    pub fn for_user(username: &'a str) -> Self {
+        Self {
+            username,
+            user_path: Utf8Path::new(BASE_PATH).join(username),
+        }
+    }
+
+    pub async fn create_user(&self, password: &str, admin: bool) -> Result<bool> {
+        let user_file = self.user_path.join("user.json");
 
         if fs::metadata(&user_file).await.is_ok() {
             return Ok(false);
         }
 
         let data = serde_json::to_vec_pretty(&UserAccount {
-            username: username.to_owned(),
+            username: self.username.to_owned(),
             password: hash_password(password)?,
             admin,
         })?;
 
-        fs::create_dir_all(user_path).await?;
+        fs::create_dir_all(&self.user_path).await?;
         fs::write(user_file, data).await?;
 
         Ok(true)
     }
 
-    pub async fn is_valid_password(&self, username: &str, password: &str) -> Result<bool> {
-        let user_file = Utf8Path::new(BASE_PATH).join(username).join("user.json");
+    pub async fn is_valid_password(&self, password: &str) -> Result<bool> {
+        let user_file = self.user_path.join("user.json");
         let user_file = fs::read(user_file).await?;
 
         let data = serde_json::from_slice::<UserAccount>(&user_file)?;
@@ -45,8 +54,8 @@ impl UserRepository {
         verify_password(password, &data.password)
     }
 
-    pub async fn is_valid_token(&self, username: &str, token: Uuid) -> Result<bool> {
-        let token_file = Utf8Path::new(BASE_PATH).join(username).join("tokens.json");
+    pub async fn is_valid_token(&self, token: Uuid) -> Result<bool> {
+        let token_file = self.user_path.join("tokens.json");
         let token_file = fs::read(token_file).await?;
 
         let tokens = serde_json::from_slice::<HashSet<Uuid>>(&token_file)?;
@@ -54,15 +63,15 @@ impl UserRepository {
         Ok(tokens.contains(&token))
     }
 
-    pub async fn add_token(&self, username: &str, token: Uuid) -> Result<()> {
-        edit_tokens(username, |tokens| {
+    pub async fn add_token(&self, token: Uuid) -> Result<()> {
+        edit_tokens(self.username, |tokens| {
             tokens.insert(token);
         })
         .await
     }
 
-    pub async fn remove_token(&self, username: &str, token: Uuid) -> Result<()> {
-        edit_tokens(username, |tokens| {
+    pub async fn remove_token(&self, token: Uuid) -> Result<()> {
+        edit_tokens(self.username, |tokens| {
             tokens.remove(&token);
         })
         .await

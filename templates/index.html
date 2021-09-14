@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<nav class="navbar" role="navigation" aria-label="main navigation">
+<nav class="navbar is-light" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
   </div>
 
@@ -16,7 +16,7 @@
       <div class="buttons">
         {% if logged_in %}
         <form method="POST" action="/logout">
-          <button class="button is-light">
+          <button class="button is-dark is-outlined">
             Log out
           </button>
         </form>
@@ -24,7 +24,7 @@
         <a class="button is-primary" href="/register">
           <strong>Register</strong>
         </a>
-        <a class="button is-light" href="/login">
+        <a class="button is-dark is-outlined" href="/login">
           Log in
         </a>
         {% endif %}

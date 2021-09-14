@@ -2,7 +2,9 @@ use askama::Template;
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct Index;
+pub struct Index {
+    pub logged_in: bool,
+}
 
 #[derive(Template)]
 #[template(path = "login.html")]

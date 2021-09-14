@@ -2,13 +2,17 @@
 
 use axum::response::IntoResponse;
 
-use crate::{response::HtmlTemplate, templates};
+use crate::{extract::User, response::HtmlTemplate, templates};
 
 pub mod auth;
 pub mod git;
 
-pub async fn hello() -> impl IntoResponse {
-    HtmlTemplate(templates::Index)
+pub async fn hello(user: Option<User>) -> impl IntoResponse {
+    tracing::info!(?user);
+
+    HtmlTemplate(templates::Index {
+        logged_in: user.is_some(),
+    })
 }
 
 pub async fn favicon_32() -> impl IntoResponse {

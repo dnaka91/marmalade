@@ -10,6 +10,7 @@ use crate::{
     session::{COOKIE_SESSION, COOKIE_USERNAME},
 };
 
+#[derive(Debug)]
 pub struct User {
     pub username: String,
     pub token: Uuid,

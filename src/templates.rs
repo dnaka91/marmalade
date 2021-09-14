@@ -8,7 +8,9 @@ pub struct Index {
 
 #[derive(Template)]
 #[template(path = "login.html")]
-pub struct Login;
+pub struct Login {
+    pub message: Option<&'static str>,
+}
 
 #[derive(Template)]
 #[template(path = "register.html")]

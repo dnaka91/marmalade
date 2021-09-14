@@ -6,27 +6,38 @@
     <div class="container">
       <div class="columns">
         <div class="column is-6 is-offset-3">
+          <div class="box">
 
-          <form class="box" method="POST" action="/login">
             <h1 class="title">Login</h1>
 
-            <div class="field">
-              <label class="label">Username</label>
-              <div class="control">
-                <input class="input" type="text" name="username" placeholder="e.g. alex">
-              </div>
+            {% match message %}
+            {% when Some with (msg) %}
+            <div class="notification is-danger is-light">
+              {{ msg }}
             </div>
+            {% when None %}
+            {% endmatch %}
 
-            <div class="field">
-              <label class="label">Password</label>
-              <div class="control">
-                <input class="input" type="password" name="password" placeholder="********">
+            <form method="POST" action="/login">
+
+              <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                  <input class="input" type="text" name="username" placeholder="e.g. alex">
+                </div>
               </div>
-            </div>
 
-            <button class="button is-primary">Login</button>
-          </form>
+              <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                  <input class="input" type="password" name="password" placeholder="********">
+                </div>
+              </div>
 
+              <button class="button is-primary">Login</button>
+            </form>
+
+          </div>
         </div>
       </div>
     </div>

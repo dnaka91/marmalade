@@ -16,20 +16,27 @@ const BASE_PATH: &str = "temp";
 pub struct UserRepository<'a> {
     username: &'a str,
     user_path: Utf8PathBuf,
+    user_file: Utf8PathBuf,
 }
 
 impl<'a> UserRepository<'a> {
     pub fn for_user(username: &'a str) -> Self {
+        let user_path = Utf8Path::new(BASE_PATH).join(username);
+        let user_file = user_path.join("user.json");
+
         Self {
             username,
-            user_path: Utf8Path::new(BASE_PATH).join(username),
+            user_path,
+            user_file,
         }
     }
 
-    pub async fn create_user(&self, password: &str, admin: bool) -> Result<bool> {
-        let user_file = self.user_path.join("user.json");
+    pub async fn exists(&self) -> bool {
+        fs::metadata(&self.user_file).await.is_ok()
+    }
 
-        if fs::metadata(&user_file).await.is_ok() {
+    pub async fn create_user(&self, password: &str, admin: bool) -> Result<bool> {
+        if self.exists().await {
             return Ok(false);
         }
 
@@ -40,7 +47,7 @@ impl<'a> UserRepository<'a> {
         })?;
 
         fs::create_dir_all(&self.user_path).await?;
-        fs::write(user_file, data).await?;
+        fs::write(&self.user_file, data).await?;
 
         Ok(true)
     }

@@ -1,6 +1,5 @@
 use axum::{
     extract::Form,
-    http::StatusCode,
     response::{IntoResponse, Redirect},
 };
 use serde::Deserialize;
@@ -12,12 +11,21 @@ use crate::{
     extract::User,
     repositories::UserRepository,
     response::{HtmlTemplate, SetCookies},
-    session::{COOKIE_SESSION, COOKIE_USERNAME},
+    session::{COOKIE_ERROR, COOKIE_SESSION, COOKIE_USERNAME},
     templates,
 };
 
-pub async fn login() -> impl IntoResponse {
-    HtmlTemplate(templates::Login)
+pub async fn login(mut cookies: Cookies) -> impl IntoResponse {
+    let message = cookies
+        .get(COOKIE_ERROR)
+        .map(|cookie| cookie.value() == "login")
+        .and_then(|error| error.then(|| "Wrong login credentials"));
+
+    if message.is_some() {
+        cookies.remove(COOKIE_ERROR);
+    }
+
+    SetCookies::new(HtmlTemplate(templates::Login { message }), cookies)
 }
 
 #[derive(Deserialize)]
@@ -30,8 +38,14 @@ pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl 
     info!(?login.username, ?login.password, "got login request");
 
     let user_repo = UserRepository::for_user(&login.username);
-    let new_token = Uuid::new_v4();
 
+    if !user_repo.exists().await || !user_repo.is_valid_password(&login.password).await.unwrap() {
+        cookies.add(Cookie::new(COOKIE_ERROR, "login"));
+
+        return SetCookies::new(Redirect::to("/login".parse().unwrap()), cookies);
+    }
+
+    let new_token = Uuid::new_v4();
     user_repo.add_token(new_token).await.unwrap();
 
     cookies.add(Cookie::new(COOKIE_SESSION, new_token.to_string()));

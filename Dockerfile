@@ -19,7 +19,7 @@ FROM alpine:3.14
 
 RUN apk add --no-cache git=2.32.0-r0 \
     && addgroup -g 1000 marmelade \
-    && adduser -u 1000 -G me -D -g '' -H -h /dev/null -s /sbin/nologin marmelade
+    && adduser -u 1000 -G marmelade -D -g '' -H -h /dev/null -s /sbin/nologin marmelade
 
 COPY --from=builder /root/.cargo/bin/marmalade /bin/
 

@@ -10,6 +10,7 @@ use crate::{
 
 pub mod auth;
 pub mod git;
+pub mod repo;
 
 pub async fn hello(user: Option<User>) -> impl IntoResponse {
     tracing::info!(?user);

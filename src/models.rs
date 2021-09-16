@@ -6,3 +6,9 @@ pub struct UserAccount {
     pub password: String,
     pub admin: bool,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct UserRepo {
+    pub name: String,
+    pub private: bool,
+}

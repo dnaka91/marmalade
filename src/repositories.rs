@@ -1,15 +1,20 @@
-use std::{collections::HashSet, io::ErrorKind};
+use std::{collections::HashSet, io::ErrorKind, sync::Arc};
 
 use anyhow::Result;
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
+use futures_util::FutureExt;
+use git2::Repository;
 use tokio::fs;
 use uuid::Uuid;
 
-use crate::{dirs::DIRS, models::UserAccount};
+use crate::{
+    dirs::DIRS,
+    models::{UserAccount, UserRepo},
+};
 
 pub struct UserRepository<'a> {
     username: &'a str,
@@ -27,6 +32,10 @@ impl<'a> UserRepository<'a> {
             user_path,
             user_file,
         }
+    }
+
+    pub fn repo<'b>(&self, name: &'b str) -> RepoRepository<'b> {
+        RepoRepository::from_user_repo(self, name)
     }
 
     pub async fn exists(&self) -> bool {
@@ -117,4 +126,64 @@ fn verify_password(password: &str, hash: &str) -> Result<bool> {
     let hasher = Argon2::default();
 
     Ok(hasher.verify_password(password.as_bytes(), &hash).is_ok())
+}
+
+pub struct RepoRepository<'a> {
+    name: &'a str,
+    repo_path: Utf8PathBuf,
+    repo_file: Utf8PathBuf,
+    repo_git: Arc<Utf8PathBuf>,
+}
+
+impl<'a> RepoRepository<'a> {
+    pub fn new(user: &str, repo: &'a str) -> Self {
+        Self::from_base(&DIRS.data_dir().join(user), repo)
+    }
+
+    fn from_user_repo(user_repo: &UserRepository<'_>, name: &'a str) -> Self {
+        Self::from_base(&user_repo.user_path, name)
+    }
+
+    fn from_base(base: &Utf8Path, name: &'a str) -> Self {
+        let repo_path = base.join(name);
+        let repo_file = repo_path.join("repo.json");
+        let repo_git = Arc::new(repo_path.join("repo.git"));
+
+        Self {
+            name,
+            repo_path,
+            repo_file,
+            repo_git,
+        }
+    }
+
+    pub async fn exists(&self) -> bool {
+        let (file, git) = tokio::join!(
+            fs::metadata(&self.repo_file).map(|m| m.is_ok()),
+            fs::metadata(&*self.repo_git).map(|m| m.is_ok())
+        );
+
+        file && git
+    }
+
+    pub async fn create(&self, private: bool) -> Result<bool> {
+        if self.exists().await {
+            return Ok(false);
+        }
+
+        let data = serde_json::to_vec_pretty(&UserRepo {
+            name: self.name.to_owned(),
+            private,
+        })?;
+
+        fs::create_dir_all(&self.repo_path).await?;
+        fs::write(&self.repo_file, data).await?;
+
+        fs::create_dir_all(&*self.repo_git).await?;
+
+        let repo_git = Arc::clone(&self.repo_git);
+        tokio::task::spawn_blocking(move || Repository::init_bare(&*repo_git));
+
+        Ok(true)
+    }
 }

@@ -15,8 +15,15 @@ pub fn build(settings: GlobalSettings) -> Router<BoxRoute> {
         .nest(
             "/:user/:repo",
             Router::new()
+                .route("/", get(handlers::repo::index))
                 .route("/:service", post(handlers::git::pack))
-                .route("/info/refs", get(handlers::git::info_refs)),
+                .route("/info/refs", get(handlers::git::info_refs))
+                .check_infallible()
+                .boxed(),
+        )
+        .route(
+            "/repo/create",
+            get(handlers::repo::create).post(handlers::repo::create_post),
         )
         .route("/show", get(handlers::auth::show))
         .route(

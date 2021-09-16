@@ -5,8 +5,13 @@
 use std::{env, net::SocketAddr};
 
 use anyhow::Result;
-use axum::Server;
+use axum::{
+    handler::{get, post, Handler},
+    AddExtensionLayer, Router, Server,
+};
 use tokio::signal;
+use tower::ServiceBuilder;
+use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
@@ -17,7 +22,6 @@ mod handlers;
 mod models;
 mod repositories;
 mod response;
-mod routes;
 mod session;
 mod settings;
 mod templates;
@@ -43,7 +47,43 @@ async fn main() -> Result<()> {
     let addr = SocketAddr::from((ADDRESS, 8080));
 
     let server = Server::try_bind(&addr)?
-        .serve(routes::build(settings).into_make_service())
+        .serve(
+            Router::new()
+                .route("/favicon-16x16.png", get(handlers::favicon_16))
+                .route("/favicon-32x32.png", get(handlers::favicon_32))
+                .nest(
+                    "/:user/:repo",
+                    Router::new()
+                        .route("/:service", post(handlers::git::pack))
+                        .route("/info/refs", get(handlers::git::info_refs))
+                        .route("/", get(handlers::repo::index)),
+                )
+                .route(
+                    "/repo/create",
+                    get(handlers::repo::create).post(handlers::repo::create_post),
+                )
+                .route("/show", get(handlers::auth::show))
+                .route(
+                    "/register",
+                    get(handlers::auth::register).post(handlers::auth::register_post),
+                )
+                .route("/logout", post(handlers::auth::logout))
+                .route(
+                    "/login",
+                    get(handlers::auth::login).post(handlers::auth::login_post),
+                )
+                .route("/", get(handlers::hello))
+                .or(handlers::handle_404.into_service())
+                .layer(
+                    ServiceBuilder::new()
+                        .layer(TraceLayer::new_for_http())
+                        .layer(CompressionLayer::new())
+                        .layer(AddExtensionLayer::new(settings))
+                        .into_inner(),
+                )
+                .check_infallible()
+                .into_make_service(),
+        )
         .with_graceful_shutdown(shutdown());
 
     info!("Listening on {}", addr);

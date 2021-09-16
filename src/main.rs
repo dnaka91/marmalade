@@ -17,6 +17,7 @@ use tracing_subscriber::{filter::Targets, prelude::*};
 
 mod cookies;
 mod dirs;
+mod de;
 mod extract;
 mod handlers;
 mod models;

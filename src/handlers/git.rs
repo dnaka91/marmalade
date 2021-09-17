@@ -9,12 +9,13 @@ use axum::{
     http::{Response, StatusCode},
     response::IntoResponse,
 };
-use camino::Utf8PathBuf;
 use futures_util::TryStreamExt;
 use serde::Deserialize;
 use tokio::{fs, process::Command};
 use tokio_util::io::{ReaderStream, StreamReader};
 use tracing::{error, info};
+
+use crate::dirs::DIRS;
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -70,11 +71,11 @@ pub async fn info_refs(
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = Utf8PathBuf::from(format!(
-        "temp/{}/{}",
-        params.user,
-        params.repo.strip_suffix(".git").unwrap_or(&params.repo)
-    ));
+    let path = DIRS
+        .data_dir()
+        .join(&params.user)
+        .join(params.repo.strip_suffix(".git").unwrap_or(&params.repo))
+        .join("repo.git");
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);
@@ -115,11 +116,11 @@ pub async fn pack(
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = Utf8PathBuf::from(format!(
-        "temp/{}/{}",
-        params.user,
-        params.repo.strip_suffix(".git").unwrap_or(&params.repo)
-    ));
+    let path = DIRS
+        .data_dir()
+        .join(&params.user)
+        .join(params.repo.strip_suffix(".git").unwrap_or(&params.repo))
+        .join("repo.git");
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);

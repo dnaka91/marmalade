@@ -3,6 +3,10 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Redirect},
 };
+use comrak::{
+    plugins::syntect::SyntectAdapter, ComrakExtensionOptions, ComrakOptions, ComrakPlugins,
+    ComrakRenderPlugins,
+};
 use serde::Deserialize;
 use tracing::info;
 
@@ -31,8 +35,45 @@ pub async fn index(
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user,?path.repo, "got repo index request");
 
-    if RepoRepository::new(&path.user, &path.repo).exists().await {
-        Ok(HtmlTemplate(templates::repo::Index { name: path.repo }))
+    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+
+    if repo_repo.exists().await {
+        let readme = repo_repo.get_readme().await.unwrap().map_or_else(
+            || "No project readme available".to_owned(),
+            |readme| {
+                comrak::markdown_to_html_with_plugins(
+                    &readme,
+                    &ComrakOptions {
+                        extension: ComrakExtensionOptions {
+                            strikethrough: true,
+                            tagfilter: true,
+                            table: true,
+                            autolink: true,
+                            tasklist: true,
+                            superscript: true,
+                            header_ids: Some("user-content-".to_owned()),
+                            footnotes: false,
+                            description_lists: false,
+                            front_matter_delimiter: None,
+                        },
+                        ..ComrakOptions::default()
+                    },
+                    &ComrakPlugins {
+                        render: ComrakRenderPlugins {
+                            codefence_syntax_highlighter: Some(&SyntectAdapter::new(
+                                "base16-ocean.dark",
+                            )),
+                        },
+                    },
+                )
+            },
+        );
+
+        Ok(HtmlTemplate(templates::repo::Index {
+            user: path.user,
+            repo: path.repo,
+            readme,
+        }))
     } else {
         Err(StatusTemplate(StatusCode::NOT_FOUND))
     }

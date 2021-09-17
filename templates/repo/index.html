@@ -4,11 +4,16 @@
 <section class="section">
   <div class="container">
     <div class="box">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/{{ user }}">{{ user }}</a></li>
+          <li class="is-active"><a href="#" aria-current="page">{{ repo }}</a></li>
+        </ul>
+      </nav>
+    </div>
 
-      <h1 class="title">{{ name }}</h1>
-      <hr/>
-      <p class="subtitle">Hello there</p>
-
+    <div class="box">
+      <div class="content">{{ readme|safe }}</div>
     </div>
   </div>
 </section>

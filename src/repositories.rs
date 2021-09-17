@@ -7,7 +7,7 @@ use argon2::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use futures_util::FutureExt;
-use git2::Repository;
+use git2::{ObjectType, Repository};
 use tokio::fs;
 use uuid::Uuid;
 
@@ -182,8 +182,46 @@ impl<'a> RepoRepository<'a> {
         fs::create_dir_all(&*self.repo_git).await?;
 
         let repo_git = Arc::clone(&self.repo_git);
-        tokio::task::spawn_blocking(move || Repository::init_bare(&*repo_git));
+        tokio::task::spawn_blocking(move || Repository::init_bare(&*repo_git)).await??;
 
         Ok(true)
+    }
+
+    pub async fn get_readme(&self) -> Result<Option<String>> {
+        if !self.exists().await {
+            return Ok(None);
+        }
+
+        let repo_git = Arc::clone(&self.repo_git);
+        let readme = tokio::task::spawn_blocking(move || -> Result<Option<String>> {
+            let repo = Repository::open(&*repo_git)?;
+            let tree = repo.head()?.peel_to_commit()?.tree()?;
+            let entry = tree.iter().find(|entry| {
+                entry
+                    .name()
+                    .map(|name| {
+                        name.eq_ignore_ascii_case("README.md")
+                            || name.eq_ignore_ascii_case("README")
+                    })
+                    .unwrap_or_default()
+                    && entry
+                        .kind()
+                        .map(|kind| kind == ObjectType::Blob)
+                        .unwrap_or_default()
+            });
+
+            let content = match entry {
+                Some(entry) => {
+                    let blob = entry.to_object(&repo)?.into_blob().unwrap();
+                    String::from_utf8(blob.content().to_owned()).ok()
+                }
+                None => None,
+            };
+
+            Ok(content)
+        })
+        .await??;
+
+        Ok(readme)
     }
 }

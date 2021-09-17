@@ -47,7 +47,9 @@ pub mod repo {
     #[derive(Template)]
     #[template(path = "repo/index.html")]
     pub struct Index {
-        pub name: String,
+        pub user: String,
+        pub repo: String,
+        pub readme: String,
     }
 
     #[derive(Template)]

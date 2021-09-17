@@ -12,3 +12,14 @@ pub struct UserRepo {
     pub name: String,
     pub private: bool,
 }
+
+pub struct RepoFile {
+    pub name: String,
+    pub kind: FileKind,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FileKind {
+    Directory,
+    File,
+}

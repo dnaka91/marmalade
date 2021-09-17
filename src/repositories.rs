@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use crate::{
     dirs::DIRS,
-    models::{UserAccount, UserRepo},
+    models::{FileKind, RepoFile, UserAccount, UserRepo},
 };
 
 pub struct UserRepository<'a> {
@@ -223,5 +223,34 @@ impl<'a> RepoRepository<'a> {
         .await??;
 
         Ok(readme)
+    }
+
+    pub async fn get_file_list(&self) -> Result<Vec<RepoFile>> {
+        if !self.exists().await {
+            return Ok(Vec::new());
+        }
+
+        let repo_git = Arc::clone(&self.repo_git);
+        let list = tokio::task::spawn_blocking(move || -> Result<Vec<RepoFile>> {
+            let repo = Repository::open(&*repo_git)?;
+            let tree = repo.head()?.peel_to_commit()?.tree()?;
+
+            Ok(tree
+                .iter()
+                .filter_map(|entry| {
+                    let kind = match entry.kind()? {
+                        ObjectType::Tree => FileKind::Directory,
+                        ObjectType::Blob => FileKind::File,
+                        _ => return None,
+                    };
+                    let name = entry.name()?.to_owned();
+
+                    Some(RepoFile { name, kind })
+                })
+                .collect())
+        })
+        .await??;
+
+        Ok(list)
     }
 }

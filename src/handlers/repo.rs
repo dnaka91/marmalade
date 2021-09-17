@@ -38,6 +38,12 @@ pub async fn index(
     let repo_repo = RepoRepository::new(&path.user, &path.repo);
 
     if repo_repo.exists().await {
+        let files = {
+            let mut files = repo_repo.get_file_list().await.unwrap();
+            files.sort_by_key(|file| file.kind);
+            files
+        };
+
         let readme = repo_repo.get_readme().await.unwrap().map_or_else(
             || "No project readme available".to_owned(),
             |readme| {
@@ -72,6 +78,7 @@ pub async fn index(
         Ok(HtmlTemplate(templates::repo::Index {
             user: path.user,
             repo: path.repo,
+            files,
             readme,
         }))
     } else {

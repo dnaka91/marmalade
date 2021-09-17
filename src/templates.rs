@@ -44,11 +44,15 @@ pub fn status_emoji(status: &StatusCode) -> char {
 pub mod repo {
     use askama::Template;
 
+    use crate::models::RepoFile;
+    use crate::models::FileKind;
+
     #[derive(Template)]
     #[template(path = "repo/index.html")]
     pub struct Index {
         pub user: String,
         pub repo: String,
+        pub files: Vec<RepoFile>,
         pub readme: String,
     }
 

@@ -34,7 +34,7 @@ pub async fn index(
     if RepoRepository::new(&path.user, &path.repo).exists().await {
         Ok(HtmlTemplate(templates::repo::Index { name: path.repo }))
     } else {
-        Err(StatusTemplate('🤷', StatusCode::NOT_FOUND))
+        Err(StatusTemplate(StatusCode::NOT_FOUND))
     }
 }
 

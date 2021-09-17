@@ -28,9 +28,17 @@ pub struct Show {
 #[derive(Template)]
 #[template(path = "error.html")]
 pub struct Error {
-    pub emoji: char,
     pub code: StatusCode,
     pub message: Option<&'static str>,
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub fn status_emoji(status: &StatusCode) -> char {
+    match *status {
+        StatusCode::NOT_FOUND => '🤷',
+        StatusCode::FORBIDDEN => '🙅',
+        _ => ' ',
+    }
 }
 
 pub mod repo {

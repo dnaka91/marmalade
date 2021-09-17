@@ -38,6 +38,6 @@ where
             .await
             .ok()
             .and_then(|cookies| Self::from_cookies(&cookies))
-            .ok_or(StatusTemplate('🙅', StatusCode::FORBIDDEN))
+            .ok_or(StatusTemplate(StatusCode::FORBIDDEN))
     }
 }

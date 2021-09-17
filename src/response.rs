@@ -33,7 +33,7 @@ where
     }
 }
 
-pub struct StatusTemplate(pub char, pub StatusCode);
+pub struct StatusTemplate(pub StatusCode);
 
 impl IntoResponse for StatusTemplate {
     type Body = Full<Bytes>;
@@ -41,14 +41,13 @@ impl IntoResponse for StatusTemplate {
 
     fn into_response(self) -> Response<Self::Body> {
         let mut res = HtmlTemplate(templates::Error {
-            emoji: self.0,
-            code: self.1,
+            code: self.0,
             message: None,
         })
         .into_response();
 
         if res.status() != StatusCode::INTERNAL_SERVER_ERROR {
-            *res.status_mut() = self.1;
+            *res.status_mut() = self.0;
         }
 
         res

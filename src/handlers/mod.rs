@@ -29,5 +29,5 @@ pub async fn favicon_16() -> impl IntoResponse {
 }
 
 pub async fn handle_404() -> impl IntoResponse {
-    StatusTemplate('🤷', StatusCode::NOT_FOUND)
+    StatusTemplate(StatusCode::NOT_FOUND)
 }

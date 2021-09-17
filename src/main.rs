@@ -16,8 +16,8 @@ use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
 mod cookies;
-mod dirs;
 mod de;
+mod dirs;
 mod extract;
 mod handlers;
 mod models;

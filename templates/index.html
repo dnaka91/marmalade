@@ -1,38 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<nav class="navbar is-light" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-  </div>
-
-  <div class="navbar-start">
-    <a class="navbar-item" href="/">
-      Home
-    </a>
-  </div>
-
-  <div class="navbar-end">
-    <div class="navbar-item">
-      <div class="buttons">
-        {% if logged_in %}
-        <form method="POST" action="/logout">
-          <button class="button is-dark is-outlined">
-            Log out
-          </button>
-        </form>
-        {% else %}
-        <a class="button is-primary" href="/register">
-          <strong>Register</strong>
-        </a>
-        <a class="button is-dark is-outlined" href="/login">
-          Log in
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</nav>
-
+{% include "nav.html" %}
 <section class="section">
   <div class="container">
     <h1 class="title">Hello, World!</h1>

@@ -76,6 +76,7 @@ pub async fn index(
         );
 
         Ok(HtmlTemplate(templates::repo::Index {
+            logged_in: true,
             user: path.user,
             repo: path.repo,
             files,

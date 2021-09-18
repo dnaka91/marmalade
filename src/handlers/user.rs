@@ -26,6 +26,7 @@ pub async fn index(
         let repos = user_repo.list_repo_names().await.unwrap();
 
         Ok(HtmlTemplate(templates::user::Index {
+            logged_in: true,
             user: path.user,
             repos,
         }))

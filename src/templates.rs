@@ -47,21 +47,22 @@ pub mod user {
     #[derive(Template)]
     #[template(path = "user/index.html")]
     pub struct Index {
+        pub logged_in: bool,
         pub user: String,
         pub repos: Vec<String>,
     }
-
 }
 
 pub mod repo {
     use askama::Template;
 
-    use crate::models::RepoFile;
     use crate::models::FileKind;
+    use crate::models::RepoFile;
 
     #[derive(Template)]
     #[template(path = "repo/index.html")]
     pub struct Index {
+        pub logged_in: bool,
         pub user: String,
         pub repo: String,
         pub files: Vec<RepoFile>,

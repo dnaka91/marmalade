@@ -16,6 +16,14 @@
       <p class="panel-heading">
         Repositories
       </p>
+      <div class="panel-block">
+        <a class="button is-primary is-fullwidth" href="/repo/create">
+          <span class="icon">
+            <i class="fas fa-plus"></i>
+          </span>
+          <span>New repository</span>
+        </a>
+      </div>
       {% for repo in repos %}
       <a class="panel-block" href="/{{ user }}/{{ repo }}">
         {{ repo }}

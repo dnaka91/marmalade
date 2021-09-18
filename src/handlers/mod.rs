@@ -17,7 +17,7 @@ pub async fn hello(user: Option<User>) -> impl IntoResponse {
     tracing::info!(?user);
 
     HtmlTemplate(templates::Index {
-        logged_in: user.is_some(),
+        auth_user: user.map(|user| user.username),
     })
 }
 

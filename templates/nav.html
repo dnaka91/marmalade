@@ -6,25 +6,33 @@
     <a class="navbar-item" href="/">
       Home
     </a>
+    {% match auth_user %}
+    {% when Some with (name) %}
+    <a class="navbar-item" href="/{{ name }}">
+      Profile
+    </a>
+    {%- when None -%}
+    {% endmatch %}
   </div>
 
   <div class="navbar-end">
     <div class="navbar-item">
       <div class="buttons">
-        {% if logged_in %}
+        {% match auth_user %}
+        {% when Some with (_) %}
         <form method="POST" action="/logout">
           <button class="button is-dark is-outlined">
             Log out
           </button>
         </form>
-        {% else %}
+        {% when None %}
         <a class="button is-primary" href="/register">
           <strong>Register</strong>
         </a>
         <a class="button is-dark is-outlined" href="/login">
           Log in
         </a>
-        {% endif %}
+        {% endmatch %}
       </div>
     </div>
   </div>

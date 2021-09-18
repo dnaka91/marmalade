@@ -15,7 +15,7 @@ pub struct BasePath {
 }
 
 pub async fn index(
-    _user: User,
+    user: User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, "got user index request");
@@ -26,7 +26,7 @@ pub async fn index(
         let repos = user_repo.list_repo_names().await.unwrap();
 
         Ok(HtmlTemplate(templates::user::Index {
-            logged_in: true,
+            auth_user: Some(user.username),
             user: path.user,
             repos,
         }))

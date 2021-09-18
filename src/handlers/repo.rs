@@ -30,7 +30,7 @@ pub struct BasePath {
 }
 
 pub async fn index(
-    _user: User,
+    user: User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user,?path.repo, "got repo index request");
@@ -76,7 +76,7 @@ pub async fn index(
         );
 
         Ok(HtmlTemplate(templates::repo::Index {
-            logged_in: true,
+            auth_user: Some(user.username),
             user: path.user,
             repo: path.repo,
             files,

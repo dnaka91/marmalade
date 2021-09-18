@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::ErrorKind, sync::Arc};
+use std::{collections::HashSet, convert::TryFrom, io::ErrorKind, sync::Arc};
 
 use anyhow::Result;
 use argon2::{
@@ -89,6 +89,23 @@ impl<'a> UserRepository<'a> {
             tokens.remove(&token);
         })
         .await
+    }
+
+    pub async fn list_repo_names(&self) -> Result<Vec<String>> {
+        let mut entries = fs::read_dir(&self.user_path).await?;
+        let mut names = Vec::new();
+
+        while let Some(entry) = entries.next_entry().await? {
+            let path = Utf8PathBuf::try_from(entry.path())?;
+
+            if fs::metadata(path.join("repo.json")).await.is_ok()
+                && fs::metadata(path.join("repo.git")).await.is_ok()
+            {
+                names.push(path.file_name().unwrap().to_owned());
+            }
+        }
+
+        Ok(names)
     }
 }
 

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="box">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li class="is-active"><a href="#" aria-current="page">{{ user }}</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <nav class="panel">
+      <p class="panel-heading">
+        Repositories
+      </p>
+      {% for repo in repos %}
+      <a class="panel-block" href="/{{ user }}/{{ repo }}">
+        {{ repo }}
+      </a>
+      {% endfor %}
+    </nav>
+  </div>
+</section>
+{% endblock content %}

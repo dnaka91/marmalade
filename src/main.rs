@@ -59,6 +59,7 @@ async fn main() -> Result<()> {
                         .route("/info/refs", get(handlers::git::info_refs))
                         .route("/", get(handlers::repo::index)),
                 )
+                .route("/:user", get(handlers::user::index))
                 .route(
                     "/repo/create",
                     get(handlers::repo::create).post(handlers::repo::create_post),

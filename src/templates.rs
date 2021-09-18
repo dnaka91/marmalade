@@ -41,6 +41,18 @@ pub fn status_emoji(status: &StatusCode) -> char {
     }
 }
 
+pub mod user {
+    use askama::Template;
+
+    #[derive(Template)]
+    #[template(path = "user/index.html")]
+    pub struct Index {
+        pub user: String,
+        pub repos: Vec<String>,
+    }
+
+}
+
 pub mod repo {
     use askama::Template;
 

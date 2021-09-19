@@ -204,6 +204,16 @@ impl<'a> RepoRepository<'a> {
         Ok(true)
     }
 
+    pub async fn delete(&self) -> Result<bool> {
+        if !self.exists().await {
+            return Ok(false);
+        }
+
+        fs::remove_dir_all(&self.repo_path).await?;
+
+        Ok(true)
+    }
+
     pub async fn get_readme(&self) -> Result<Option<String>> {
         if !self.exists().await {
             return Ok(None);

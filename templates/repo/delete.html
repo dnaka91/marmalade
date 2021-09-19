@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero is-fullheight">
+  <div class="hero-body">
+    <div class="container">
+      <div class="columns">
+        <div class="column is-6 is-offset-3">
+          <div class="box">
+
+            <h1 class="title">⚠️ Delete repository</h1>
+
+            <div class="content">
+              Are you absolutely sure you want to delete the <code>{{ repo }}</code> repository?
+              <br />
+              <strong>This action can not be undone!</strong>
+            </div>
+
+            <form method="POST" action="delete">
+              <button class="button is-danger">Delete</button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

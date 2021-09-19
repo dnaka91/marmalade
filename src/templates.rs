@@ -73,4 +73,10 @@ pub mod repo {
     pub struct Create {
         pub message: Option<&'static str>,
     }
+
+    #[derive(Template)]
+    #[template(path = "repo/delete.html")]
+    pub struct Delete {
+        pub repo: String,
+    }
 }

@@ -33,7 +33,7 @@ pub async fn index(
     user: User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user,?path.repo, "got repo index request");
+    info!(?path.user, ?path.repo, "got repo index request");
 
     let repo_repo = RepoRepository::new(&path.user, &path.repo);
 
@@ -130,4 +130,36 @@ pub async fn create_post(
         cookies.add(Cookie::new(COOKIE_ERROR, CREATE_EXISTS));
         SetCookies::new(Redirect::to("/repo/create".parse().unwrap()), cookies)
     }
+}
+
+pub async fn delete(
+    user: User,
+    Path(path): Path<BasePath>,
+) -> Result<impl IntoResponse, StatusTemplate> {
+    info!(?path.user, ?path.repo, "got repo delete request");
+
+    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+
+    if user.username != path.user || !repo_repo.exists().await {
+        return Err(StatusTemplate(StatusCode::NOT_FOUND));
+    }
+
+    Ok(HtmlTemplate(templates::repo::Delete { repo: path.repo }))
+}
+
+pub async fn delete_post(
+    user: User,
+    Path(path): Path<BasePath>,
+) -> Result<impl IntoResponse, StatusTemplate> {
+    info!(?path.user, ?path.repo, "got repo delete request");
+
+    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+
+    if user.username != path.user || !repo_repo.exists().await {
+        return Err(StatusTemplate(StatusCode::NOT_FOUND));
+    }
+
+    let _deleted = repo_repo.delete().await.unwrap();
+
+    Ok(Redirect::to(format!("/{}", path.user).parse().unwrap()))
 }

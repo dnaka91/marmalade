@@ -24,6 +24,7 @@ const CREATE_EXISTS: &str = "repo_create_exists";
 
 #[derive(Deserialize)]
 pub struct BasePath {
+    #[serde(deserialize_with = "crate::de::percent")]
     pub user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     pub repo: String,

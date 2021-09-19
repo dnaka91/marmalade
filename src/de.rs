@@ -1,6 +1,7 @@
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 use serde::de::{self, Deserializer, Visitor};
+
 pub fn hex<'de, D>(deserializer: D) -> Result<[u8; 64], D::Error>
 where
     D: Deserializer<'de>,
@@ -29,6 +30,33 @@ impl<'de> Visitor<'de> for HexVisitor {
         hex::decode_to_slice(v, &mut data).map_err(E::custom)?;
 
         Ok(data)
+    }
+}
+
+pub fn percent<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_str(PercentVisitor)
+}
+
+struct PercentVisitor;
+
+impl<'de> Visitor<'de> for PercentVisitor {
+    type Value = String;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a percent-encoded string")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        percent_encoding::percent_decode_str(v)
+            .decode_utf8()
+            .map(Cow::into_owned)
+            .map_err(E::custom)
     }
 }
 
@@ -74,23 +102,19 @@ impl<'de> Visitor<'de> for RepoNameVisitor {
     type Value = String;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("repository name with optional `.git` suffix")
+        formatter.write_str("percent-ecoded repository name with optional `.git` suffix")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        Ok(v.strip_suffix(".git").unwrap_or(v).to_owned())
-    }
-
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        Ok(match v.strip_suffix(".git") {
-            Some(stripped) => stripped.to_owned(),
-            None => v,
-        })
+        percent_encoding::percent_decode_str(v)
+            .decode_utf8()
+            .map(|v| match v.strip_suffix(".git") {
+                Some(stripped) => stripped.to_owned(),
+                None => v.into_owned(),
+            })
+            .map_err(E::custom)
     }
 }

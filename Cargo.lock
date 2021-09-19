@@ -120,6 +120,7 @@ checksum = "2582b77e0f3c506ec4838a25fa8a5f97b9bed72bb6d3d272ea1c031d8bd373bc"
 dependencies = [
  "askama_escape",
  "nom",
+ "percent-encoding",
  "proc-macro2",
  "quote",
  "syn",
@@ -804,6 +805,7 @@ dependencies = [
  "git2",
  "hex",
  "once_cell",
+ "percent-encoding",
  "serde",
  "serde_json",
  "tokio",

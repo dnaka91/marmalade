@@ -8,7 +8,7 @@
     </a>
     {% match auth_user %}
     {% when Some with (name) %}
-    <a class="navbar-item" href="/{{ name }}">
+    <a class="navbar-item" href="/{{ name|urlencode }}">
       Profile
     </a>
     {%- when None -%}

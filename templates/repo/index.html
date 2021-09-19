@@ -7,7 +7,7 @@
     <div class="box">
       <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>
-          <li><a href="/{{ user }}">{{ user }}</a></li>
+          <li><a href="/{{ user|urlencode }}">{{ user }}</a></li>
           <li class="is-active"><a href="#" aria-current="page">{{ repo }}</a></li>
         </ul>
       </nav>

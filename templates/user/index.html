@@ -25,7 +25,7 @@
         </a>
       </div>
       {% for repo in repos %}
-      <a class="panel-block" href="/{{ user }}/{{ repo }}">
+      <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}">
         {{ repo }}
       </a>
       {% endfor %}

@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, clippy::all, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
+#![recursion_limit = "256"]
 
 use std::{env, net::SocketAddr};
 

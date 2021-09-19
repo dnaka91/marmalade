@@ -16,7 +16,7 @@ use git2::{BranchType, Repository};
 use serde::Deserialize;
 use tokio::{fs, process::Command};
 use tokio_util::io::{ReaderStream, StreamReader};
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 use crate::dirs::DIRS;
 
@@ -195,7 +195,7 @@ fn adjust_head(path: &Utf8Path) -> Result<()> {
     if let Some(branch) = branch {
         let head = format!("refs/heads/{}", branch.name()?.unwrap());
 
-        tracing::info!(new_head = ?head, "adjusting repo head");
+        debug!(new_head = ?head, "adjusting repo head");
         repo.set_head(&head)?;
     }
 

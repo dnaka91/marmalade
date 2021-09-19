@@ -3,13 +3,16 @@ use std::{
     process::Stdio,
 };
 
+use anyhow::Result;
 use axum::{
     body::{Body, Full},
     extract::{Path, Query},
     http::{Response, StatusCode},
     response::IntoResponse,
 };
+use camino::Utf8Path;
 use futures_util::TryStreamExt;
+use git2::{BranchType, Repository};
 use serde::Deserialize;
 use tokio::{fs, process::Command};
 use tokio_util::io::{ReaderStream, StreamReader};
@@ -132,7 +135,7 @@ pub async fn pack(
 
     let mut process = Command::new(params.service.command())
         .arg("--stateless-rpc")
-        .arg(path)
+        .arg(&path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -158,6 +161,10 @@ pub async fn pack(
         if let Err(error) = process.wait().await {
             error!(?error, "failed completing command");
         }
+
+        if let Err(error) = adjust_head(&path) {
+            error!(?error, "failed adjusting repo head");
+        }
     });
 
     let body = Body::wrap_stream(ReaderStream::new(stdout));
@@ -167,4 +174,30 @@ pub async fn pack(
         .header("Cache-Control", "no-cache")
         .body(body)
         .unwrap())
+}
+
+fn adjust_head(path: &Utf8Path) -> Result<()> {
+    let repo = Repository::open(path)?;
+    if repo.head().is_ok() {
+        return Ok(());
+    }
+
+    let branch = repo
+        .find_branch("main", BranchType::Local)
+        .map(Some)
+        .or_else(|_| repo.find_branch("master", BranchType::Local).map(Some))
+        .or_else(|_| {
+            repo.branches(Some(BranchType::Local))
+                .and_then(|mut branches| branches.next().transpose())
+                .map(|next| next.map(|(branch, _)| branch))
+        })?;
+
+    if let Some(branch) = branch {
+        let head = format!("refs/heads/{}", branch.name()?.unwrap());
+
+        tracing::info!(new_head = ?head, "adjusting repo head");
+        repo.set_head(&head)?;
+    }
+
+    Ok(())
 }

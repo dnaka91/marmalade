@@ -13,12 +13,16 @@ pub struct Utf8ProjectDirs {
 
 impl Utf8ProjectDirs {
     fn new() -> Result<Self> {
-        let dirs = ProjectDirs::from("rocks", "dnaka91", env!("CARGO_PKG_NAME"))
-            .context("failed finding project dirs")?;
+        let data_dir = if whoami::username() == "marmalade" {
+            Utf8PathBuf::from(concat!("/var/lib/", env!("CARGO_PKG_NAME")))
+        } else {
+            let dirs = ProjectDirs::from("rocks", "dnaka91", env!("CARGO_PKG_NAME"))
+                .context("failed finding project dirs")?;
 
-        let data_dir = Utf8Path::from_path(dirs.data_dir())
-            .context("project data dir is not valid UTF-8")?
-            .to_owned();
+            Utf8Path::from_path(dirs.data_dir())
+                .context("project data dir is not valid UTF-8")?
+                .to_owned()
+        };
 
         Ok(Self { data_dir })
     }

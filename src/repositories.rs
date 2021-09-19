@@ -1,13 +1,13 @@
 use std::{collections::HashSet, convert::TryFrom, io::ErrorKind, sync::Arc};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use futures_util::FutureExt;
-use git2::{ObjectType, Repository};
+use git2::{ErrorCode, ObjectType, Repository, Tree};
 use tokio::fs;
 use uuid::Uuid;
 
@@ -193,13 +193,22 @@ impl<'a> RepoRepository<'a> {
             private,
         })?;
 
-        fs::create_dir_all(&self.repo_path).await?;
-        fs::write(&self.repo_file, data).await?;
+        fs::create_dir_all(&self.repo_path)
+            .await
+            .context("failed creating repo folder")?;
+        fs::write(&self.repo_file, data)
+            .await
+            .context("failed writing repo info file")?;
 
-        fs::create_dir_all(&*self.repo_git).await?;
+        fs::create_dir_all(&*self.repo_git)
+            .await
+            .context("failed creating repo git folder")?;
 
         let repo_git = Arc::clone(&self.repo_git);
-        tokio::task::spawn_blocking(move || Repository::init_bare(&*repo_git)).await??;
+        tokio::task::spawn_blocking(move || {
+            Repository::init_bare(&*repo_git).context("failed initializing bare repo")
+        })
+        .await??;
 
         Ok(true)
     }
@@ -209,7 +218,9 @@ impl<'a> RepoRepository<'a> {
             return Ok(false);
         }
 
-        fs::remove_dir_all(&self.repo_path).await?;
+        fs::remove_dir_all(&self.repo_path)
+            .await
+            .context("failed removing repo folder")?;
 
         Ok(true)
     }
@@ -221,8 +232,11 @@ impl<'a> RepoRepository<'a> {
 
         let repo_git = Arc::clone(&self.repo_git);
         let readme = tokio::task::spawn_blocking(move || -> Result<Option<String>> {
-            let repo = Repository::open(&*repo_git)?;
-            let tree = repo.head()?.peel_to_commit()?.tree()?;
+            let repo = Repository::open(&*repo_git).context("failed opening repo")?;
+            let tree = match get_head_tree(&repo).context("failed getting head commit tree")? {
+                Some(tree) => tree,
+                None => return Ok(None),
+            };
             let entry = tree.iter().find(|entry| {
                 entry
                     .name()
@@ -239,7 +253,11 @@ impl<'a> RepoRepository<'a> {
 
             let content = match entry {
                 Some(entry) => {
-                    let blob = entry.to_object(&repo)?.into_blob().unwrap();
+                    let blob = entry
+                        .to_object(&repo)
+                        .context("failed converting entry to object")?
+                        .into_blob()
+                        .unwrap();
                     String::from_utf8(blob.content().to_owned()).ok()
                 }
                 None => None,
@@ -259,8 +277,11 @@ impl<'a> RepoRepository<'a> {
 
         let repo_git = Arc::clone(&self.repo_git);
         let list = tokio::task::spawn_blocking(move || -> Result<Vec<RepoFile>> {
-            let repo = Repository::open(&*repo_git)?;
-            let tree = repo.head()?.peel_to_commit()?.tree()?;
+            let repo = Repository::open(&*repo_git).context("failed opening repo")?;
+            let tree = match get_head_tree(&repo).context("failed getting head commit tree")? {
+                Some(tree) => tree,
+                None => return Ok(Vec::new()),
+            };
 
             Ok(tree
                 .iter()
@@ -279,5 +300,17 @@ impl<'a> RepoRepository<'a> {
         .await??;
 
         Ok(list)
+    }
+}
+
+fn get_head_tree(repo: &Repository) -> Result<Option<Tree<'_>>> {
+    match repo.head() {
+        Ok(head) => match head.peel_to_commit() {
+            Ok(commit) => commit.tree().map(Some).map_err(Into::into),
+            Err(e) if e.code() == ErrorCode::UnbornBranch => Ok(None),
+            Err(e) => Err(e.into()),
+        },
+        Err(e) if e.code() == ErrorCode::UnbornBranch => Ok(None),
+        Err(e) => Err(e.into()),
     }
 }

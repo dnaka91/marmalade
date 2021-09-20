@@ -1,7 +1,4 @@
-use axum::{
-    extract::Form,
-    response::{IntoResponse, Redirect},
-};
+use axum::{extract::Form, response::IntoResponse};
 use serde::Deserialize;
 use tracing::info;
 use uuid::Uuid;
@@ -9,6 +6,7 @@ use uuid::Uuid;
 use crate::{
     cookies::{Cookie, Cookies},
     extract::User,
+    redirect,
     repositories::UserRepository,
     response::{HtmlTemplate, SetCookies},
     session::{COOKIE_ERROR, COOKIE_SESSION, COOKIE_USERNAME},
@@ -48,14 +46,14 @@ pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl 
 
     if login.password.is_empty() {
         cookies.add(Cookie::new(COOKIE_ERROR, LOGIN_EMPTY_PW));
-        return SetCookies::new(Redirect::to("/login".parse().unwrap()), cookies);
+        return SetCookies::new(redirect::to_login(), cookies);
     }
 
     let user_repo = UserRepository::for_user(&login.username);
 
     if !user_repo.exists().await || !user_repo.is_valid_password(&login.password).await.unwrap() {
         cookies.add(Cookie::new(COOKIE_ERROR, LOGIN_NOT_FOUND));
-        return SetCookies::new(Redirect::to("/login".parse().unwrap()), cookies);
+        return SetCookies::new(redirect::to_login(), cookies);
     }
 
     let new_token = Uuid::new_v4();
@@ -64,7 +62,7 @@ pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl 
     cookies.add(Cookie::new(COOKIE_SESSION, new_token.to_string()));
     cookies.add(Cookie::new(COOKIE_USERNAME, login.username));
 
-    SetCookies::new(Redirect::to("/".parse().unwrap()), cookies)
+    SetCookies::new(redirect::to_root(), cookies)
 }
 
 pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
@@ -76,7 +74,7 @@ pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
     cookies.remove(COOKIE_SESSION);
     cookies.remove(COOKIE_USERNAME);
 
-    SetCookies::new(Redirect::to("/".parse().unwrap()), cookies)
+    SetCookies::new(redirect::to_root(), cookies)
 }
 
 pub async fn show(user: User) -> impl IntoResponse {
@@ -112,7 +110,7 @@ pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> im
 
     if login.password.is_empty() {
         cookies.add(Cookie::new(COOKIE_ERROR, REGISTER_EMPTY_PW));
-        return SetCookies::new(Redirect::to("/register".parse().unwrap()), cookies);
+        return SetCookies::new(redirect::to_register(), cookies);
     }
 
     let user_repo = UserRepository::for_user(&login.username);
@@ -125,9 +123,9 @@ pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> im
         cookies.add(Cookie::new(COOKIE_SESSION, new_token.to_string()));
         cookies.add(Cookie::new(COOKIE_USERNAME, login.username));
 
-        SetCookies::new(Redirect::to("/".parse().unwrap()), cookies)
+        SetCookies::new(redirect::to_root(), cookies)
     } else {
         cookies.add(Cookie::new(COOKIE_ERROR, REGISTER_EXISTS));
-        SetCookies::new(Redirect::to("/register".parse().unwrap()), cookies)
+        SetCookies::new(redirect::to_register(), cookies)
     }
 }

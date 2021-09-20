@@ -22,6 +22,7 @@ mod dirs;
 mod extract;
 mod handlers;
 mod models;
+mod redirect;
 mod repositories;
 mod response;
 mod session;

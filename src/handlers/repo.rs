@@ -1,7 +1,7 @@
 use axum::{
     extract::{Form, Path},
     http::StatusCode,
-    response::{IntoResponse, Redirect},
+    response::IntoResponse,
 };
 use comrak::{
     plugins::syntect::SyntectAdapter, ComrakExtensionOptions, ComrakOptions, ComrakPlugins,
@@ -13,6 +13,7 @@ use tracing::info;
 use crate::{
     cookies::{Cookie, Cookies},
     extract::User,
+    redirect,
     repositories::{RepoRepository, UserRepository},
     response::{HtmlTemplate, SetCookies, StatusTemplate},
     session::COOKIE_ERROR,
@@ -108,7 +109,7 @@ pub async fn create_post(
 
     if create.name.is_empty() {
         cookies.add(Cookie::new(COOKIE_ERROR, CREATE_EMPTY_NAME));
-        return SetCookies::new(Redirect::to("/repo/create".parse().unwrap()), cookies);
+        return SetCookies::new(redirect::to_repo_create(), cookies);
     }
 
     let user_repo = UserRepository::for_user(&user.username);
@@ -120,16 +121,12 @@ pub async fn create_post(
 
     if created {
         SetCookies::new(
-            Redirect::to(
-                format!("/{}/{}", user.username, create.name)
-                    .parse()
-                    .unwrap(),
-            ),
+            redirect::to_repo_index(&user.username, &create.name),
             cookies,
         )
     } else {
         cookies.add(Cookie::new(COOKIE_ERROR, CREATE_EXISTS));
-        SetCookies::new(Redirect::to("/repo/create".parse().unwrap()), cookies)
+        SetCookies::new(redirect::to_repo_create(), cookies)
     }
 }
 
@@ -162,5 +159,5 @@ pub async fn delete_post(
 
     let _deleted = repo_repo.delete().await.unwrap();
 
-    Ok(Redirect::to(format!("/{}", path.user).parse().unwrap()))
+    Ok(redirect::to_user_index(&path.user))
 }

@@ -97,7 +97,15 @@ pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
     SetCookies::new(HtmlTemplate(templates::Register { error }), cookies)
 }
 
-pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
+#[derive(Deserialize)]
+pub struct Register {
+    username: String,
+    password: String,
+    #[serde(default, deserialize_with = "crate::de::form_bool")]
+    private: bool,
+}
+
+pub async fn register_post(Form(login): Form<Register>, mut cookies: Cookies) -> impl IntoResponse {
     info!(?login.username, "got register request");
 
     if !validate::username(&login.username) {
@@ -117,7 +125,10 @@ pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> im
     }
 
     let user_repo = UserRepository::for_user(&login.username);
-    let created = user_repo.create_user(&login.password, false).await.unwrap();
+    let created = user_repo
+        .create_user(&login.password, login.private, false)
+        .await
+        .unwrap();
 
     if created {
         let new_token = Uuid::new_v4();

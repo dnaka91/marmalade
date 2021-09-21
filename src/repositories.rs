@@ -42,7 +42,12 @@ impl<'a> UserRepository<'a> {
         fs::metadata(&self.user_file).await.is_ok()
     }
 
-    pub async fn create_user(&self, password: &str, admin: bool) -> Result<bool> {
+    pub async fn visible(&self, auth_user: &str, user: &str) -> Result<bool> {
+        let info = self.load_info().await?;
+        Ok(!info.private || auth_user == user)
+    }
+
+    pub async fn create_user(&self, password: &str, private: bool, admin: bool) -> Result<bool> {
         if self.exists().await {
             return Ok(false);
         }
@@ -50,6 +55,7 @@ impl<'a> UserRepository<'a> {
         let data = serde_json::to_vec_pretty(&UserAccount {
             username: self.username.to_owned(),
             password: hash_password(password)?,
+            private,
             admin,
         })?;
 
@@ -106,6 +112,11 @@ impl<'a> UserRepository<'a> {
         }
 
         Ok(names)
+    }
+
+    async fn load_info(&self) -> Result<UserAccount> {
+        let data = fs::read(&self.user_file).await?;
+        serde_json::from_slice(&data).map_err(Into::into)
     }
 }
 
@@ -181,6 +192,11 @@ impl<'a> RepoRepository<'a> {
         );
 
         file && git
+    }
+
+    pub async fn visible(&self, auth_user: &str, repo_user: &str) -> Result<bool> {
+        let info = self.load_info().await?;
+        Ok(!info.private || auth_user == repo_user)
     }
 
     pub async fn create(&self, private: bool) -> Result<bool> {
@@ -300,6 +316,11 @@ impl<'a> RepoRepository<'a> {
         .await??;
 
         Ok(list)
+    }
+
+    async fn load_info(&self) -> Result<UserRepo> {
+        let data = fs::read(&self.repo_file).await?;
+        serde_json::from_slice(&data).map_err(Into::into)
     }
 }
 

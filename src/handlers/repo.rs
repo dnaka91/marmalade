@@ -36,7 +36,7 @@ pub async fn index(
 
     let repo_repo = RepoRepository::new(&path.user, &path.repo);
 
-    if repo_repo.exists().await {
+    if repo_repo.exists().await && repo_repo.visible(&user.username, &path.user).await.unwrap() {
         let files = {
             let mut files = repo_repo.get_file_list().await.unwrap();
             files.sort_by_key(|file| file.kind);

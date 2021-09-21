@@ -17,7 +17,7 @@ impl Cookie {
         cookie.set_path("/");
         cookie.set_same_site(cookie::SameSite::Strict);
         cookie.set_http_only(true);
-        // cookie.set_secure(true);
+        cookie.set_secure(true);
         cookie.make_permanent();
 
         Self(cookie.into_owned())

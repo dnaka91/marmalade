@@ -11,7 +11,7 @@ use axum::{
     AddExtensionLayer, Router, Server,
 };
 use tokio::signal;
-use tower::ServiceBuilder;
+use tower::{util::AndThenLayer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
@@ -21,6 +21,7 @@ mod de;
 mod dirs;
 mod extract;
 mod handlers;
+mod middleware;
 mod models;
 mod redirect;
 mod repositories;
@@ -87,6 +88,7 @@ async fn main() -> Result<()> {
                         .layer(TraceLayer::new_for_http())
                         .layer(CompressionLayer::new())
                         .layer(AddExtensionLayer::new(settings))
+                        .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),
                 )
                 .check_infallible()

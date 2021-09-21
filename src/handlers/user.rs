@@ -24,7 +24,7 @@ pub async fn index(
     let user_repo = UserRepository::for_user(&path.user);
 
     if user_repo.exists().await && user_repo.visible(&user.username, &path.user).await.unwrap() {
-        let repos = user_repo.list_repo_names().await.unwrap();
+        let repos = user_repo.list_repo_names(&user.username).await.unwrap();
 
         Ok(HtmlTemplate(templates::user::Index {
             auth_user: Some(user.username),

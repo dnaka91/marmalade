@@ -111,6 +111,15 @@ pub mod user {
         pub user: String,
         pub repos: Vec<String>,
     }
+
+    impl Index {
+        fn auth_same_user(&self) -> bool {
+            self.auth_user
+                .as_deref()
+                .map(|u| u == self.user)
+                .unwrap_or_default()
+        }
+    }
 }
 
 pub mod repo {

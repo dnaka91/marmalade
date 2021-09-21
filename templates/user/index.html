@@ -16,6 +16,7 @@
       <p class="panel-heading">
         Repositories
       </p>
+      {% if self.auth_same_user() %}
       <div class="panel-block">
         <a class="button is-primary is-fullwidth" href="/repo/create">
           <span class="icon">
@@ -24,6 +25,7 @@
           <span>New repository</span>
         </a>
       </div>
+      {% endif %}
       {% for repo in repos %}
       <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}">
         {{ repo }}

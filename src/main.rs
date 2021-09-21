@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
                     "/login",
                     get(handlers::auth::login).post(handlers::auth::login_post),
                 )
-                .route("/", get(handlers::hello))
+                .route("/", get(handlers::index))
                 .or(handlers::handle_404.into_service())
                 .layer(
                     ServiceBuilder::new()

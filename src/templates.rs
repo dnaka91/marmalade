@@ -120,6 +120,13 @@ pub mod user {
                 .unwrap_or_default()
         }
     }
+
+    #[derive(Template)]
+    #[template(path = "user/list.html")]
+    pub struct List {
+        pub auth_user: Option<String>,
+        pub users: Vec<String>,
+    }
 }
 
 pub mod repo {

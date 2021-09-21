@@ -35,3 +35,17 @@ pub async fn index(
         Err(StatusTemplate(StatusCode::NOT_FOUND))
     }
 }
+
+pub async fn list(user: User) -> impl IntoResponse {
+    info!("got user list request");
+
+    let users = UserRepository::for_user(&user.username)
+        .list_user_names(&user.username)
+        .await
+        .unwrap();
+
+    HtmlTemplate(templates::user::List {
+        auth_user: Some(user.username),
+        users,
+    })
+}

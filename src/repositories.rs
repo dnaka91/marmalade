@@ -97,6 +97,27 @@ impl<'a> UserRepository<'a> {
         .await
     }
 
+    pub async fn list_user_names(&self, auth_user: &str) -> Result<Vec<String>> {
+        let mut entries = fs::read_dir(DIRS.data_dir()).await?;
+        let mut names = Vec::new();
+
+        while let Some(entry) = entries.next_entry().await? {
+            let path = Utf8PathBuf::try_from(entry.path())?;
+            let file_name = path.file_name().unwrap();
+
+            if auth_user != file_name
+                && fs::metadata(path.join("user.json")).await.is_ok()
+                && UserRepository::for_user(file_name)
+                    .visible(auth_user, file_name)
+                    .await?
+            {
+                names.push(file_name.to_owned());
+            }
+        }
+
+        Ok(names)
+    }
+
     pub async fn list_repo_names(&self, auth_user: &str) -> Result<Vec<String>> {
         let mut entries = fs::read_dir(&self.user_path).await?;
         let mut names = Vec::new();

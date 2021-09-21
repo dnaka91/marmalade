@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "../nav.html" %}
+<section class="section">
+  <div class="container">
+
+    <nav class="panel">
+      <p class="panel-heading">
+        Users
+      </p>
+      {% for user in users %}
+      <a class="panel-block" href="/{{ user|urlencode }}">
+        {{ user }}
+      </a>
+      {% endfor %}
+    </nav>
+
+  </div>
+</section>
+{% endblock content %}

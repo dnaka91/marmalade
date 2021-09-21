@@ -73,7 +73,6 @@ async fn main() -> Result<()> {
                     "/repo/create",
                     get(handlers::repo::create).post(handlers::repo::create_post),
                 )
-                .route("/show", get(handlers::auth::show))
                 .route(
                     "/register",
                     get(handlers::auth::register).post(handlers::auth::register_post),

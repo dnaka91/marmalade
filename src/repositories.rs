@@ -66,8 +66,7 @@ impl<'a> UserRepository<'a> {
     }
 
     pub async fn is_valid_password(&self, password: &str) -> Result<bool> {
-        let user_file = self.user_path.join("user.json");
-        let user_file = fs::read(user_file).await?;
+        let user_file = fs::read(&self.user_file).await?;
 
         let data = serde_json::from_slice::<UserAccount>(&user_file)?;
 

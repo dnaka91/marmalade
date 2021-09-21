@@ -73,18 +73,6 @@ pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
     SetCookies::new(redirect::to_root(), cookies)
 }
 
-pub async fn show(user: User) -> impl IntoResponse {
-    let user_repo = UserRepository::for_user(&user.username);
-
-    let username = user_repo
-        .is_valid_token(user.token)
-        .await
-        .unwrap()
-        .then(|| user.username);
-
-    HtmlTemplate(templates::Show { username })
-}
-
 pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
     let error = cookies
         .get(COOKIE_ERROR)

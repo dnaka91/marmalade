@@ -80,12 +80,6 @@ impl FromStr for RegisterError {
 }
 
 #[derive(Template)]
-#[template(path = "show.html")]
-pub struct Show {
-    pub username: Option<String>,
-}
-
-#[derive(Template)]
 #[template(path = "error.html")]
 pub struct Error {
     pub code: StatusCode,

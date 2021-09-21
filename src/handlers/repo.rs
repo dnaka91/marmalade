@@ -17,11 +17,8 @@ use crate::{
     repositories::{RepoRepository, UserRepository},
     response::{HtmlTemplate, SetCookies, StatusTemplate},
     session::COOKIE_ERROR,
-    templates,
+    templates, validate,
 };
-
-const CREATE_EMPTY_NAME: &str = "repo_create_empty_name";
-const CREATE_EXISTS: &str = "repo_create_exists";
 
 #[derive(Deserialize)]
 pub struct BasePath {
@@ -89,8 +86,16 @@ pub async fn index(
     }
 }
 
-pub async fn create(_user: User) -> impl IntoResponse {
-    HtmlTemplate(templates::repo::Create { message: None })
+pub async fn create(_user: User, mut cookies: Cookies) -> impl IntoResponse {
+    let error = cookies
+        .get(COOKIE_ERROR)
+        .and_then(|cookie| cookie.value().parse().ok());
+
+    if error.is_some() {
+        cookies.remove(COOKIE_ERROR);
+    }
+
+    HtmlTemplate(templates::repo::Create { error })
 }
 
 #[derive(Deserialize)]
@@ -107,8 +112,11 @@ pub async fn create_post(
 ) -> impl IntoResponse {
     info!(?user.username, ?create.name, "got repo create request");
 
-    if create.name.is_empty() {
-        cookies.add(Cookie::new(COOKIE_ERROR, CREATE_EMPTY_NAME));
+    if !validate::repository(&create.name) {
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::repo::RepoCreateError::InvalidName.as_ref(),
+        ));
         return SetCookies::new(redirect::to_repo_create(), cookies);
     }
 
@@ -125,7 +133,10 @@ pub async fn create_post(
             cookies,
         )
     } else {
-        cookies.add(Cookie::new(COOKIE_ERROR, CREATE_EXISTS));
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::repo::RepoCreateError::AlreadyExists.as_ref(),
+        ));
         SetCookies::new(redirect::to_repo_create(), cookies)
     }
 }

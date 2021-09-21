@@ -10,10 +10,18 @@
 
             <h1 class="title">Register</h1>
 
-            {% match message %}
-            {% when Some with (msg) %}
+            {% match error %}
+            {% when Some with (e) %}
             <div class="notification is-danger is-light">
-              {{ msg }}
+              {% match e %}
+              {% when RegisterError::InvalidUsername %}
+              Username must be at least 3 characters long and consist of only lowercase/uppercase characters, numbers,
+              <code>-</code> and <code>_</code>.
+              {% when RegisterError::InvalidPassword %}
+              Password must be at least 6 characters long.
+              {% when RegisterError::UsernameTaken %}
+              Username is not available.
+              {% endmatch %}
             </div>
             {%- when None -%}
             {% endmatch %}

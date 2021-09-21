@@ -29,6 +29,7 @@ mod response;
 mod session;
 mod settings;
 mod templates;
+mod validate;
 
 #[cfg(debug_assertions)]
 const ADDRESS: [u8; 4] = [127, 0, 0, 1];

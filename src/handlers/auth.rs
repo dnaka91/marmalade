@@ -10,29 +10,19 @@ use crate::{
     repositories::UserRepository,
     response::{HtmlTemplate, SetCookies},
     session::{COOKIE_ERROR, COOKIE_SESSION, COOKIE_USERNAME},
-    templates,
+    templates, validate,
 };
 
-const LOGIN_EMPTY_PW: &str = "login_empty_pw";
-const LOGIN_NOT_FOUND: &str = "login_not_found";
-
-const REGISTER_EMPTY_PW: &str = "register_empty_pw";
-const REGISTER_EXISTS: &str = "register_exists";
-
 pub async fn login(mut cookies: Cookies) -> impl IntoResponse {
-    let message = cookies.get(COOKIE_ERROR).and_then(|cookie| {
-        Some(match cookie.value() {
-            LOGIN_EMPTY_PW => "Password mustn't be empty",
-            LOGIN_NOT_FOUND => "Wrong login credentials",
-            _ => return None,
-        })
-    });
+    let error = cookies
+        .get(COOKIE_ERROR)
+        .and_then(|cookie| cookie.value().parse().ok());
 
-    if message.is_some() {
+    if error.is_some() {
         cookies.remove(COOKIE_ERROR);
     }
 
-    SetCookies::new(HtmlTemplate(templates::Login { message }), cookies)
+    SetCookies::new(HtmlTemplate(templates::Login { error }), cookies)
 }
 
 #[derive(Deserialize)]
@@ -44,15 +34,21 @@ pub struct Login {
 pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
     info!(?login.username, "got login request");
 
-    if login.password.is_empty() {
-        cookies.add(Cookie::new(COOKIE_ERROR, LOGIN_EMPTY_PW));
+    if login.username.is_empty() || login.password.is_empty() {
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::LoginError::Empty.as_ref(),
+        ));
         return SetCookies::new(redirect::to_login(), cookies);
     }
 
     let user_repo = UserRepository::for_user(&login.username);
 
     if !user_repo.exists().await || !user_repo.is_valid_password(&login.password).await.unwrap() {
-        cookies.add(Cookie::new(COOKIE_ERROR, LOGIN_NOT_FOUND));
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::LoginError::UnknownUser.as_ref(),
+        ));
         return SetCookies::new(redirect::to_login(), cookies);
     }
 
@@ -90,26 +86,33 @@ pub async fn show(user: User) -> impl IntoResponse {
 }
 
 pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
-    let message = cookies.get(COOKIE_ERROR).and_then(|cookie| {
-        Some(match cookie.value() {
-            REGISTER_EMPTY_PW => "Password mustn't be empty",
-            REGISTER_EXISTS => "The username is not available",
-            _ => return None,
-        })
-    });
+    let error = cookies
+        .get(COOKIE_ERROR)
+        .and_then(|cookie| cookie.value().parse().ok());
 
-    if message.is_some() {
+    if error.is_some() {
         cookies.remove(COOKIE_ERROR);
     }
 
-    SetCookies::new(HtmlTemplate(templates::Register { message }), cookies)
+    SetCookies::new(HtmlTemplate(templates::Register { error }), cookies)
 }
 
 pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
     info!(?login.username, "got register request");
 
-    if login.password.is_empty() {
-        cookies.add(Cookie::new(COOKIE_ERROR, REGISTER_EMPTY_PW));
+    if !validate::username(&login.username) {
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::RegisterError::InvalidUsername.as_ref(),
+        ));
+        return SetCookies::new(redirect::to_register(), cookies);
+    }
+
+    if !validate::password(&login.password) {
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::RegisterError::InvalidPassword.as_ref(),
+        ));
         return SetCookies::new(redirect::to_register(), cookies);
     }
 
@@ -125,7 +128,10 @@ pub async fn register_post(Form(login): Form<Login>, mut cookies: Cookies) -> im
 
         SetCookies::new(redirect::to_root(), cookies)
     } else {
-        cookies.add(Cookie::new(COOKIE_ERROR, REGISTER_EXISTS));
+        cookies.add(Cookie::new(
+            COOKIE_ERROR,
+            templates::RegisterError::UsernameTaken.as_ref(),
+        ));
         SetCookies::new(redirect::to_register(), cookies)
     }
 }

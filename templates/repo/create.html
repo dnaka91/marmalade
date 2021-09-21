@@ -10,10 +10,16 @@
 
             <h1 class="title">Create repository</h1>
 
-            {% match message %}
-            {% when Some with (msg) %}
+            {% match error %}
+            {% when Some with (e) %}
             <div class="notification is-danger is-light">
-              {{ msg }}
+              {% match e %}
+              {% when RepoCreateError::InvalidName %}
+              Repository name must be at least 1 character long and only consist of lowercase/uppercase characters,
+              numbers, <code>-</code> and <code>_</code>.
+              {% when RepoCreateError::AlreadyExists %}
+              Repository with the same name already exists.
+              {% endmatch %}
             </div>
             {%- when None -%}
             {% endmatch %}

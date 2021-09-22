@@ -51,8 +51,11 @@ impl<'a> RepoRepository<'a> {
     }
 
     pub async fn visible(&self, auth_user: &str, repo_user: &str) -> Result<bool> {
-        let info = self.load_info().await?;
-        Ok(!info.private || auth_user == repo_user)
+        if auth_user == repo_user {
+            return Ok(true);
+        }
+
+        Ok(!self.load_info().await?.private)
     }
 
     pub async fn create(&self, private: bool) -> Result<bool> {

@@ -39,8 +39,11 @@ impl<'a> UserRepository<'a> {
     }
 
     pub async fn visible(&self, auth_user: &str, user: &str) -> Result<bool> {
-        let info = self.load_info().await?;
-        Ok(!info.private || auth_user == user)
+        if auth_user == user {
+            return Ok(true);
+        }
+
+        Ok(!self.load_info().await?.private)
     }
 
     pub async fn create_user(&self, password: &str, private: bool, admin: bool) -> Result<bool> {

@@ -66,6 +66,7 @@ async fn main() -> Result<()> {
                         .route("/", get(handlers::repo::index)),
                 )
                 .route("/:user", get(handlers::user::index))
+                .route("/highlight.css", get(handlers::highlight_css))
                 .route("/favicon-16x16.png", get(handlers::favicon_16))
                 .route("/favicon-32x32.png", get(handlers::favicon_32))
                 .route("/users", get(handlers::user::list))

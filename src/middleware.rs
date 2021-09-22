@@ -22,7 +22,7 @@ pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<Box
             "default-src 'none'; \
             font-src https://cdn.jsdelivr.net; \
             img-src 'self' https://cdn.jsdelivr.net; \
-            style-src 'unsafe-inline' https://cdn.jsdelivr.net;",
+            style-src 'self' https://cdn.jsdelivr.net;",
         ),
     );
     headers.append(REFERRER_POLICY, "same-origin".parse().unwrap());

@@ -3,11 +3,14 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use comrak::{
-    plugins::syntect::SyntectAdapter, ComrakExtensionOptions, ComrakOptions, ComrakPlugins,
-    ComrakRenderPlugins,
-};
+use once_cell::sync::Lazy;
+use pulldown_cmark::{CodeBlockKind, Event, Tag};
 use serde::Deserialize;
+use syntect::{
+    html::{ClassStyle, ClassedHTMLGenerator},
+    parsing::{SyntaxReference, SyntaxSet},
+    util::LinesWithEndings,
+};
 use tracing::info;
 
 use crate::{
@@ -45,33 +48,7 @@ pub async fn index(
 
         let readme = repo_repo.get_readme().await.unwrap().map_or_else(
             || "No project readme available".to_owned(),
-            |readme| {
-                comrak::markdown_to_html_with_plugins(
-                    &readme,
-                    &ComrakOptions {
-                        extension: ComrakExtensionOptions {
-                            strikethrough: true,
-                            tagfilter: true,
-                            table: true,
-                            autolink: true,
-                            tasklist: true,
-                            superscript: true,
-                            header_ids: Some("user-content-".to_owned()),
-                            footnotes: false,
-                            description_lists: false,
-                            front_matter_delimiter: None,
-                        },
-                        ..ComrakOptions::default()
-                    },
-                    &ComrakPlugins {
-                        render: ComrakRenderPlugins {
-                            codefence_syntax_highlighter: Some(&SyntectAdapter::new(
-                                "base16-ocean.dark",
-                            )),
-                        },
-                    },
-                )
-            },
+            |readme| render_markdown(&readme),
         );
 
         Ok(HtmlTemplate(templates::repo::Index {
@@ -171,4 +148,60 @@ pub async fn delete_post(
     let _deleted = repo_repo.delete().await.unwrap();
 
     Ok(redirect::to_user_index(&path.user))
+}
+
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(SyntaxSet::load_defaults_newlines);
+
+#[allow(clippy::option_if_let_else)]
+fn render_markdown(text: &str) -> String {
+    let default_syntax = SYNTAX_SET.find_syntax_plain_text();
+    let mut syntax = None;
+
+    let parser =
+        pulldown_cmark::Parser::new_ext(text, pulldown_cmark::Options::all()).map(|event| {
+            match event {
+                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+                    syntax = Some(
+                        SYNTAX_SET
+                            .find_syntax_by_token(&lang)
+                            .unwrap_or(default_syntax),
+                    );
+                    Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang)))
+                }
+                Event::Text(text) => {
+                    if let Some(syntax) = syntax {
+                        Event::Html(highlight_code(&text, syntax).into())
+                    } else {
+                        Event::Text(text)
+                    }
+                }
+                Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+                    syntax = None;
+                    Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang)))
+                }
+                Event::Html(html) => Event::Text(html),
+                event => event,
+            }
+        });
+
+    let mut html = String::new();
+    pulldown_cmark::html::push_html(&mut html, parser);
+
+    html
+}
+
+fn highlight_code(text: &str, syntax: &SyntaxReference) -> String {
+    let mut gen = ClassedHTMLGenerator::new_with_class_style(
+        syntax,
+        &*SYNTAX_SET,
+        ClassStyle::SpacedPrefixed {
+            prefix: "highlight-",
+        },
+    );
+
+    for line in LinesWithEndings::from(text) {
+        gen.parse_html_for_line_which_includes_newline(line);
+    }
+
+    gen.finalize()
 }

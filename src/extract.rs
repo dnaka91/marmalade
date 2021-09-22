@@ -1,8 +1,9 @@
 use axum::{
     async_trait,
-    extract::{FromRequest, RequestParts},
-    http::StatusCode,
+    extract::{FromRequest, RequestParts, TypedHeader},
+    http::{header::WWW_AUTHENTICATE, StatusCode},
 };
+use headers::{authorization::Basic, Authorization, HeaderMap, HeaderValue};
 use uuid::Uuid;
 
 use crate::{
@@ -12,7 +13,6 @@ use crate::{
     session::{COOKIE_SESSION, COOKIE_USERNAME},
 };
 
-#[derive(Debug)]
 pub struct User {
     pub username: String,
     pub token: Uuid,
@@ -55,6 +55,49 @@ where
                 .ok_or(FORBIDDEN)
         } else {
             Err(FORBIDDEN)
+        }
+    }
+}
+
+pub struct BasicAuth {
+    pub username: String,
+}
+
+#[async_trait]
+impl<B> FromRequest<B> for BasicAuth
+where
+    B: Send,
+{
+    type Rejection = (HeaderMap, StatusTemplate);
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        const FORBIDDEN: StatusTemplate = StatusTemplate(StatusCode::FORBIDDEN);
+        const INTERNAL_SERVER_ERROR: StatusTemplate =
+            StatusTemplate(StatusCode::INTERNAL_SERVER_ERROR);
+        const UNAUTHORIZED: StatusTemplate = StatusTemplate(StatusCode::UNAUTHORIZED);
+
+        let TypedHeader(Authorization(auth)) =
+            <TypedHeader<Authorization<Basic>>>::from_request(req)
+                .await
+                .map_err(|_| {
+                    let mut headers = HeaderMap::with_capacity(1);
+                    headers.insert(WWW_AUTHENTICATE, HeaderValue::from_static("Basic"));
+
+                    (headers, UNAUTHORIZED)
+                })?;
+
+        let repo = UserRepository::for_user(auth.username());
+
+        if repo.exists().await {
+            repo.is_valid_password(auth.password())
+                .await
+                .map_err(|_| (HeaderMap::new(), INTERNAL_SERVER_ERROR))?
+                .then(|| BasicAuth {
+                    username: auth.username().to_owned(),
+                })
+                .ok_or((HeaderMap::new(), FORBIDDEN))
+        } else {
+            Err((HeaderMap::new(), FORBIDDEN))
         }
     }
 }

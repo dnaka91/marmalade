@@ -18,7 +18,7 @@ use tokio::{fs, process::Command};
 use tokio_util::io::{ReaderStream, StreamReader};
 use tracing::{debug, error, info};
 
-use crate::dirs::DIRS;
+use crate::{dirs::DIRS, extract::BasicAuth};
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -71,10 +71,11 @@ pub struct InfoRefsQuery {
 }
 
 pub async fn info_refs(
+    auth: BasicAuth,
     Path(params): Path<InfoRefsParams>,
     Query(query): Query<InfoRefsQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    info!(user = ?params.user, repo = ?params.repo, "got request");
+    info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
     let path = DIRS
         .data_dir()
@@ -118,10 +119,11 @@ pub struct PackParams {
 }
 
 pub async fn pack(
+    auth:BasicAuth,
     Path(params): Path<PackParams>,
     body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
-    info!(user = ?params.user, repo = ?params.repo, "got request");
+    info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
     let path = DIRS
         .data_dir()

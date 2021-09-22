@@ -34,7 +34,7 @@ pub async fn index(
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo index request");
 
-    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+    let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
     if repo_repo.exists().await && repo_repo.visible(&user.username, &path.user).await.unwrap() {
         let files = {
@@ -147,7 +147,7 @@ pub async fn delete(
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo delete request");
 
-    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+    let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
     if user.username != path.user || !repo_repo.exists().await {
         return Err(StatusTemplate(StatusCode::NOT_FOUND));
@@ -162,7 +162,7 @@ pub async fn delete_post(
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo delete request");
 
-    let repo_repo = RepoRepository::new(&path.user, &path.repo);
+    let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
     if user.username != path.user || !repo_repo.exists().await {
         return Err(StatusTemplate(StatusCode::NOT_FOUND));

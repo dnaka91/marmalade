@@ -77,11 +77,10 @@ pub async fn info_refs(
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = DIRS
-        .data_dir()
-        .join(&params.user)
-        .join(params.repo.strip_suffix(".git").unwrap_or(&params.repo))
-        .join("repo.git");
+    let path = DIRS.repo_git_dir(
+        &params.user,
+        params.repo.strip_suffix(".git").unwrap_or(&params.repo),
+    );
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);
@@ -119,17 +118,16 @@ pub struct PackParams {
 }
 
 pub async fn pack(
-    auth:BasicAuth,
+    auth: BasicAuth,
     Path(params): Path<PackParams>,
     body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = DIRS
-        .data_dir()
-        .join(&params.user)
-        .join(params.repo.strip_suffix(".git").unwrap_or(&params.repo))
-        .join("repo.git");
+    let path = DIRS.repo_git_dir(
+        &params.user,
+        params.repo.strip_suffix(".git").unwrap_or(&params.repo),
+    );
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);

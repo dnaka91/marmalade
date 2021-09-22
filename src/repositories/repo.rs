@@ -1,50 +1,27 @@
-use std::sync::Arc;
-
 use anyhow::{Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
 use futures_util::FutureExt;
 use git2::{ErrorCode, ObjectType, Repository, Tree};
 use tokio::fs;
 
-use super::UserRepository;
 use crate::{
     dirs::DIRS,
     models::{FileKind, RepoFile, UserRepo},
 };
 
-pub struct RepoRepository<'a> {
-    name: &'a str,
-    repo_path: Utf8PathBuf,
-    repo_file: Utf8PathBuf,
-    repo_git: Arc<Utf8PathBuf>,
+pub struct RepoRepository<'a, 'b> {
+    user: &'a str,
+    repo: &'b str,
 }
 
-impl<'a> RepoRepository<'a> {
-    pub fn new(user: &str, repo: &'a str) -> Self {
-        Self::from_base(&DIRS.data_dir().join(user), repo)
-    }
-
-    pub(super) fn from_user_repo(user_repo: &UserRepository<'_>, name: &'a str) -> Self {
-        Self::from_base(&user_repo.user_path, name)
-    }
-
-    pub(super) fn from_base(base: &Utf8Path, name: &'a str) -> Self {
-        let repo_path = base.join(name);
-        let repo_file = repo_path.join("repo.json");
-        let repo_git = Arc::new(repo_path.join("repo.git"));
-
-        Self {
-            name,
-            repo_path,
-            repo_file,
-            repo_git,
-        }
+impl<'a, 'b> RepoRepository<'a, 'b> {
+    pub fn for_repo(user: &'a str, repo: &'b str) -> Self {
+        Self { user, repo }
     }
 
     pub async fn exists(&self) -> bool {
         let (file, git) = tokio::join!(
-            fs::metadata(&self.repo_file).map(|m| m.is_ok()),
-            fs::metadata(&*self.repo_git).map(|m| m.is_ok())
+            fs::metadata(DIRS.repo_info_file(self.user, self.repo)).map(|m| m.is_ok()),
+            fs::metadata(DIRS.repo_git_dir(self.user, self.repo)).map(|m| m.is_ok())
         );
 
         file && git
@@ -64,24 +41,24 @@ impl<'a> RepoRepository<'a> {
         }
 
         let data = serde_json::to_vec_pretty(&UserRepo {
-            name: self.name.to_owned(),
+            name: self.repo.to_owned(),
             private,
         })?;
 
-        fs::create_dir_all(&self.repo_path)
+        fs::create_dir_all(DIRS.repo_dir(self.user, self.repo))
             .await
             .context("failed creating repo folder")?;
-        fs::write(&self.repo_file, data)
+        fs::write(DIRS.repo_info_file(self.user, self.repo), data)
             .await
             .context("failed writing repo info file")?;
 
-        fs::create_dir_all(&*self.repo_git)
+        fs::create_dir_all(DIRS.repo_git_dir(self.user, self.repo))
             .await
             .context("failed creating repo git folder")?;
 
-        let repo_git = Arc::clone(&self.repo_git);
+        let repo_git = DIRS.repo_git_dir(self.user, self.repo);
         tokio::task::spawn_blocking(move || {
-            Repository::init_bare(&*repo_git).context("failed initializing bare repo")
+            Repository::init_bare(repo_git).context("failed initializing bare repo")
         })
         .await??;
 
@@ -93,7 +70,7 @@ impl<'a> RepoRepository<'a> {
             return Ok(false);
         }
 
-        fs::remove_dir_all(&self.repo_path)
+        fs::remove_dir_all(DIRS.repo_dir(self.user, self.repo))
             .await
             .context("failed removing repo folder")?;
 
@@ -105,9 +82,9 @@ impl<'a> RepoRepository<'a> {
             return Ok(None);
         }
 
-        let repo_git = Arc::clone(&self.repo_git);
+        let repo_git = DIRS.repo_git_dir(self.user, self.repo);
         let readme = tokio::task::spawn_blocking(move || -> Result<Option<String>> {
-            let repo = Repository::open(&*repo_git).context("failed opening repo")?;
+            let repo = Repository::open(repo_git).context("failed opening repo")?;
             let tree = match get_head_tree(&repo).context("failed getting head commit tree")? {
                 Some(tree) => tree,
                 None => return Ok(None),
@@ -150,9 +127,9 @@ impl<'a> RepoRepository<'a> {
             return Ok(Vec::new());
         }
 
-        let repo_git = Arc::clone(&self.repo_git);
+        let repo_git = DIRS.repo_git_dir(self.user, self.repo);
         let list = tokio::task::spawn_blocking(move || -> Result<Vec<RepoFile>> {
-            let repo = Repository::open(&*repo_git).context("failed opening repo")?;
+            let repo = Repository::open(repo_git).context("failed opening repo")?;
             let tree = match get_head_tree(&repo).context("failed getting head commit tree")? {
                 Some(tree) => tree,
                 None => return Ok(Vec::new()),
@@ -178,7 +155,7 @@ impl<'a> RepoRepository<'a> {
     }
 
     async fn load_info(&self) -> Result<UserRepo> {
-        let data = fs::read(&self.repo_file).await?;
+        let data = fs::read(DIRS.repo_info_file(self.user, self.repo)).await?;
         serde_json::from_slice(&data).map_err(Into::into)
     }
 }

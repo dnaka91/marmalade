@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 pub static DIRS: Lazy<Utf8ProjectDirs> = Lazy::new(|| Utf8ProjectDirs::new().unwrap());
 
 pub struct Utf8ProjectDirs {
-    data_dir: Utf8PathBuf,
+    users_dir: Utf8PathBuf,
 }
 
 impl Utf8ProjectDirs {
@@ -23,12 +23,76 @@ impl Utf8ProjectDirs {
                 .context("project data dir is not valid UTF-8")?
                 .to_owned()
         };
+        let users_dir = data_dir.join("users");
 
-        Ok(Self { data_dir })
+        Ok(Self { users_dir })
     }
 
+    // <data>/users
     #[inline]
-    pub fn data_dir(&self) -> &Utf8Path {
-        &self.data_dir
+    pub fn users_dir(&self) -> &Utf8Path {
+        &self.users_dir
+    }
+
+    // <data>/users/<user>/
+    #[inline]
+    pub fn user_dir(&self, user: &str) -> Utf8PathBuf {
+        self.users_dir.join(user)
+    }
+
+    // <data>/users/<user>/user.json
+    #[inline]
+    pub fn user_info_file(&self, user: &str) -> Utf8PathBuf {
+        let mut dir = self.user_dir(user);
+        dir.push("user.json");
+        dir
+    }
+
+    // <data>/users/<user>/tokens.json
+    #[inline]
+    pub fn user_tokens_file(&self, user: &str) -> Utf8PathBuf {
+        let mut dir = self.user_dir(user);
+        dir.push("tokens.json");
+        dir
+    }
+
+    // <data>/users/<user>/tokens.json
+    #[inline]
+    pub fn user_tokens_temp_file(&self, user: &str) -> Utf8PathBuf {
+        let mut dir = self.user_dir(user);
+        dir.push("~tokens.json");
+        dir
+    }
+
+    // <data>/users/<user>/repos/
+    #[inline]
+    pub fn user_repos_dir(&self, user: &str) -> Utf8PathBuf {
+        let mut dir = self.user_dir(user);
+        dir.push("repos");
+        dir
+    }
+
+    // <data>/users/<user>/repos/<repo>/
+    #[inline]
+    pub fn repo_dir(&self, user: &str, repo: &str) -> Utf8PathBuf {
+        let mut dir = self.user_repos_dir(user);
+        dir.push(repo);
+        dir
+    }
+
+    // <data>/users/<user>/repos/<repo>/repo.json
+    #[inline]
+    pub fn repo_info_file(&self, user: &str, repo: &str) -> Utf8PathBuf {
+        let mut dir = self.repo_dir(user, repo);
+        dir.push("repo.json");
+        dir
+    }
+
+    // <data>/users/<user>/repos/<repo>/repo.git/
+    #[inline]
+    pub fn repo_git_dir(&self, user: &str, repo: &str) -> Utf8PathBuf {
+        let mut dir = self.repo_dir(user, repo);
+        dir.push("repo.git");
+        dir
     }
 }

@@ -1,11 +1,19 @@
 #![allow(clippy::unused_async)]
 
-use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::Hasher,
+    io::{BufReader, Cursor},
+};
 
 use axum::{extract::TypedHeader, http::StatusCode, response::IntoResponse};
 use headers::{CacheControl, ContentType, ETag, HeaderMap, HeaderMapExt, IfNoneMatch};
 use once_cell::sync::Lazy;
-use syntect::{highlighting::ThemeSet, html::ClassStyle};
+use syntect::{
+    highlighting::{Theme, ThemeSet},
+    html::ClassStyle,
+    LoadingError,
+};
 use tracing::info;
 
 use crate::{
@@ -39,9 +47,9 @@ pub async fn highlight_css(
     if_none_match: Option<TypedHeader<IfNoneMatch>>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     static CSS: Lazy<String> = Lazy::new(|| {
-        let theme_set = ThemeSet::load_defaults();
+        // Unwrap: Verified with unit tests that this never fails.
         syntect::html::css_for_theme_with_class_style(
-            &theme_set.themes["base16-ocean.light"],
+            &load_theme().unwrap(),
             ClassStyle::SpacedPrefixed {
                 prefix: "highlight-",
             },
@@ -72,4 +80,20 @@ pub async fn highlight_css(
 
 pub async fn handle_404() -> impl IntoResponse {
     StatusTemplate(StatusCode::NOT_FOUND)
+}
+
+fn load_theme() -> Result<Theme, LoadingError> {
+    ThemeSet::load_from_reader(&mut BufReader::new(Cursor::new(
+        &include_bytes!("../../assets/OneHalfLight.tmTheme")[..],
+    )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_theme_succeeds() {
+        load_theme().unwrap();
+    }
 }

@@ -259,7 +259,7 @@ pub async fn settings(
 #[derive(Deserialize)]
 pub struct Settings {
     branch: String,
-    #[serde(deserialize_with = "crate::de::form_bool")]
+    #[serde(default, deserialize_with = "crate::de::form_bool")]
     private: bool,
 }
 

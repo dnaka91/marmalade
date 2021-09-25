@@ -139,6 +139,31 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(branch)
     }
 
+    pub async fn set_branch(&self, branch: &str) -> Result<()> {
+        if !self.exists().await {
+            return Ok(());
+        }
+
+        let repo_git = DIRS.repo_git_dir(self.user, self.repo);
+        let branch = branch.to_owned();
+
+        tokio::task::spawn_blocking(move || -> Result<_> {
+            let repo = Repository::open(&repo_git).context("failed opening repo")?;
+            let branch = repo
+                .find_branch(&branch, BranchType::Local)
+                .context("failed finding branch")?
+                .into_reference();
+
+            repo.set_head(branch.name().unwrap())
+                .context("failed setting head")?;
+
+            Ok(())
+        })
+        .await??;
+
+        Ok(())
+    }
+
     pub async fn get_readme(&self) -> Result<Option<String>> {
         if !self.exists().await {
             return Ok(None);
@@ -260,9 +285,20 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(list)
     }
 
-    async fn load_info(&self) -> Result<UserRepo> {
+    pub async fn load_info(&self) -> Result<UserRepo> {
         let data = fs::read(DIRS.repo_info_file(self.user, self.repo)).await?;
         serde_json::from_slice(&data).map_err(Into::into)
+    }
+
+    pub async fn save_info(&self, info: &UserRepo) -> Result<()> {
+        let real_file = DIRS.repo_info_file(self.user, self.repo);
+        let temp_file = DIRS.repo_info_temp_file(self.user, self.repo);
+
+        let buf = serde_json::to_vec_pretty(info)?;
+        fs::write(&temp_file, &buf).await?;
+        fs::rename(temp_file, real_file).await?;
+
+        Ok(())
     }
 }
 

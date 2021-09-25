@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "../nav.html" %}
+<section class="section">
+  <div class="container">
+
+    <div class="tabs is-toggle is-fullwidth">
+      <ul>
+        <li href="/{{ user|urlencode }}/{{ repo|urlencode }}">
+          <a>
+            <span class="icon is-small"><i class="fas fa-info-circle" aria-hidden="true"></i></span>
+            <span>Info</span>
+          </a>
+        </li>
+        <li>
+          <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree?branch={{ branch|urlencode }}">
+            <span class="icon is-small"><i class="fas fa-tree" aria-hidden="true"></i></span>
+            <span>Tree</span>
+          </a>
+        </li>
+        <li class="is-active">
+          <a>
+            <span class="icon is-small"><i class="fas fa-cogs" aria-hidden="true"></i></span>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="box">
+
+      {% match message %}
+      {% when Some with (m) %}
+      <div class="notification is-success is-light">
+        {% match m %}
+        {% when RepoSettingsMessage::Success %}
+        Changes successfully saved!
+        {% endmatch %}
+      </div>
+      {%- when None -%}
+      {% endmatch %}
+
+      <div class="notification">
+        The repository <strong>name</strong> can't be changed, once created. Please create a new
+        repo and push to it again to change the name.
+      </div>
+
+      <form method="POST">
+        <div class="field">
+          <label class="label" for="name">Name</label>
+          <div class="control">
+            <input class="input" type="text" id="name" value="{{ settings.name }}" readonly>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="branch">Branch</label>
+          <div class="control">
+            <div class="select">
+              <select id="branch" name="branch">
+                {% for b in branches %}
+                <option value="{{ b }}" {%- if b.as_str()==branch.as_str() %} selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <label class="checkbox">
+              <input type="checkbox" id="private" name="private" {%- if settings.private %} checked{% endif %}>
+              Private visibility (only you and admins can see the repo)
+            </label>
+          </div>
+        </div>
+
+        <button class="button is-primary">
+          <span class="icon">
+            <i class="fas fa-save"></i>
+          </span>
+          <span>Save</span>
+        </button>
+      </form>
+    </div>
+
+  </div>
+</section>
+
+<link rel="stylesheet" href="/highlight.css">
+{% endblock content %}

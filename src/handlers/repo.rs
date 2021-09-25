@@ -21,7 +21,7 @@ use crate::{
     redirect,
     repositories::{RepoRepository, UserRepository},
     response::{HtmlTemplate, SetCookies, StatusTemplate},
-    session::COOKIE_ERROR,
+    session::{COOKIE_ERROR, COOKIE_MESSAGE},
     templates, validate,
 };
 
@@ -139,7 +139,7 @@ pub async fn create(_user: User, mut cookies: Cookies) -> impl IntoResponse {
         cookies.remove(COOKIE_ERROR);
     }
 
-    HtmlTemplate(templates::repo::Create { error })
+    SetCookies::new(HtmlTemplate(templates::repo::Create { error }), cookies)
 }
 
 #[derive(Deserialize)]
@@ -215,6 +215,88 @@ pub async fn delete_post(
     let _deleted = repo_repo.delete().await.unwrap();
 
     Ok(redirect::to_user_index(&path.user))
+}
+
+pub async fn settings(
+    user: User,
+    Path(path): Path<BasePath>,
+    mut cookies: Cookies,
+) -> Result<impl IntoResponse, StatusTemplate> {
+    info!(?path.user, ?path.repo, "got repo settings request");
+
+    let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
+
+    if user.username != path.user || !repo_repo.exists().await {
+        return Err(StatusTemplate(StatusCode::NOT_FOUND));
+    }
+
+    let message = cookies
+        .get(COOKIE_MESSAGE)
+        .and_then(|cookie| cookie.value().parse().ok());
+
+    if message.is_some() {
+        cookies.remove(COOKIE_MESSAGE);
+    }
+
+    let branch = repo_repo.get_branch().await.unwrap();
+    let branches = repo_repo.list_branches().await.unwrap();
+    let settings = repo_repo.load_info().await.unwrap();
+
+    Ok(SetCookies::new(
+        HtmlTemplate(templates::repo::Settings {
+            auth_user: Some(user.username),
+            message,
+            user: path.user,
+            repo: path.repo,
+            branch,
+            branches,
+            settings,
+        }),
+        cookies,
+    ))
+}
+
+#[derive(Deserialize)]
+pub struct Settings {
+    branch: String,
+    #[serde(deserialize_with = "crate::de::form_bool")]
+    private: bool,
+}
+
+pub async fn settings_post(
+    user: User,
+    Path(path): Path<BasePath>,
+    Form(settings): Form<Settings>,
+    mut cookies: Cookies,
+) -> Result<impl IntoResponse, StatusTemplate> {
+    info!(?path.user, ?path.repo, "got repo settings request");
+
+    let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
+
+    if user.username != path.user || !repo_repo.exists().await {
+        return Err(StatusTemplate(StatusCode::NOT_FOUND));
+    }
+
+    let current = repo_repo.get_branch().await.unwrap();
+    if current != settings.branch {
+        repo_repo.set_branch(&settings.branch).await.unwrap();
+    }
+
+    let mut current = repo_repo.load_info().await.unwrap();
+    if current.private != settings.private {
+        current.private = settings.private;
+        repo_repo.save_info(&current).await.unwrap();
+    }
+
+    cookies.add(Cookie::new(
+        COOKIE_MESSAGE,
+        templates::repo::RepoSettingsMessage::Success.as_ref(),
+    ));
+
+    Ok(SetCookies::new(
+        redirect::to_repo_settings(&path.user, &path.repo),
+        cookies,
+    ))
 }
 
 static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {

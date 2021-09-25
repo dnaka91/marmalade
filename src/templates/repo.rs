@@ -4,7 +4,7 @@ use anyhow::bail;
 use askama::Template;
 use camino::Utf8PathBuf;
 
-use crate::models::{FileKind, RepoFile, RepoTree, TreeKind};
+use crate::models::{FileKind, RepoFile, RepoTree, TreeKind, UserRepo};
 
 #[derive(Template)]
 #[template(path = "repo/index.html")]
@@ -93,4 +93,40 @@ impl FromStr for RepoCreateError {
 #[template(path = "repo/delete.html")]
 pub struct Delete {
     pub repo: String,
+}
+
+#[derive(Template)]
+#[template(path = "repo/settings.html")]
+pub struct Settings {
+    pub message: Option<RepoSettingsMessage>,
+    pub auth_user: Option<String>,
+    pub user: String,
+    pub repo: String,
+    pub branch: String,
+    pub branches: Vec<String>,
+    pub settings: UserRepo,
+}
+
+#[derive(Clone, Copy)]
+pub enum RepoSettingsMessage {
+    Success,
+}
+
+impl AsRef<str> for RepoSettingsMessage {
+    fn as_ref(&self) -> &str {
+        match *self {
+            Self::Success => "RepoSettingsMessage::Success",
+        }
+    }
+}
+
+impl FromStr for RepoSettingsMessage {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "RepoSettingsMessage::Success" => Self::Success,
+            _ => bail!("unknown variant `{}`", s),
+        })
+    }
 }

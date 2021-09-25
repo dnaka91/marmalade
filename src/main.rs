@@ -64,6 +64,10 @@ async fn main() -> Result<()> {
                             "/delete",
                             get(handlers::repo::delete).post(handlers::repo::delete_post),
                         )
+                        .route(
+                            "/settings",
+                            get(handlers::repo::settings).post(handlers::repo::settings_post),
+                        )
                         .route("/", get(handlers::repo::index)),
                 )
                 .route("/:user", get(handlers::user::index))

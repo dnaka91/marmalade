@@ -56,7 +56,7 @@ impl Utf8ProjectDirs {
         dir
     }
 
-    // <data>/users/<user>/tokens.json
+    // <data>/users/<user>/~tokens.json
     #[inline]
     pub fn user_tokens_temp_file(&self, user: &str) -> Utf8PathBuf {
         let mut dir = self.user_dir(user);
@@ -85,6 +85,14 @@ impl Utf8ProjectDirs {
     pub fn repo_info_file(&self, user: &str, repo: &str) -> Utf8PathBuf {
         let mut dir = self.repo_dir(user, repo);
         dir.push("repo.json");
+        dir
+    }
+
+    // <data>/users/<user>/repos/<repo>/~repo.json
+    #[inline]
+    pub fn repo_info_temp_file(&self, user: &str, repo: &str) -> Utf8PathBuf {
+        let mut dir = self.repo_dir(user, repo);
+        dir.push("~repo.json");
         dir
     }
 

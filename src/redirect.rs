@@ -32,6 +32,19 @@ pub fn to_repo_index(user: &str, repo: &str) -> Redirect {
     Redirect::to(format!("/{}/{}", user, repo).parse().unwrap())
 }
 
+pub fn to_repo_settings(user: &str, repo: &str) -> Redirect {
+    let user = Cow::from(percent_encoding::utf8_percent_encode(
+        user,
+        NON_ALPHANUMERIC,
+    ));
+    let repo = Cow::from(percent_encoding::utf8_percent_encode(
+        repo,
+        NON_ALPHANUMERIC,
+    ));
+
+    Redirect::to(format!("/{}/{}/settings", user, repo).parse().unwrap())
+}
+
 pub fn to_user_index(user: &str) -> Redirect {
     let user = Cow::from(percent_encoding::utf8_percent_encode(
         user,
@@ -72,6 +85,10 @@ mod tests {
             "/hello/world",
             get_location(to_repo_index("hello", "world"))
         );
+        assert_eq!(
+            "/hello/world/settings",
+            get_location(to_repo_settings("hello", "world"))
+        );
         assert_eq!("/hello", get_location(to_user_index("hello")));
     }
 
@@ -80,6 +97,13 @@ mod tests {
         assert_eq!(
             "/h%C3%A9%20llo%0A%F0%9F%91%8D/w%C3%B6%0D%20rld%F0%9F%98%80",
             get_location(to_repo_index(
+                "h\u{e9} llo\n\u{1f44d}",
+                "w\u{f6}\r rld\u{1f600}"
+            ))
+        );
+        assert_eq!(
+            "/h%C3%A9%20llo%0A%F0%9F%91%8D/w%C3%B6%0D%20rld%F0%9F%98%80/settings",
+            get_location(to_repo_settings(
                 "h\u{e9} llo\n\u{1f44d}",
                 "w\u{f6}\r rld\u{1f600}"
             ))

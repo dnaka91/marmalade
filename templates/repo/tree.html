@@ -4,6 +4,30 @@
 {% include "../nav.html" %}
 <section class="section">
   <div class="container">
+
+    <div class="tabs is-toggle is-fullwidth">
+      <ul>
+        <li>
+          <a href="/{{ user|urlencode }}/{{ repo|urlencode }}">
+            <span class="icon is-small"><i class="fas fa-info-circle" aria-hidden="true"></i></span>
+            <span>Info</span>
+          </a>
+        </li>
+        <li class="is-active">
+          <a>
+            <span class="icon is-small"><i class="fas fa-tree" aria-hidden="true"></i></span>
+            <span>Tree</span>
+          </a>
+        </li>
+        <li>
+          <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/settings">
+            <span class="icon is-small"><i class="fas fa-cogs" aria-hidden="true"></i></span>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
     <div class="box">
       <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>
@@ -19,7 +43,8 @@
           <li class="is-active"><a href="#">{{ name }}</a></li>
           {% else %}
           <li>
-            <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ path|urlencode }}?branch={{ branch|urlencode }}">
+            <a
+              href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ path|urlencode }}?branch={{ branch|urlencode }}">
               {{ name }}
             </a>
           </li>
@@ -38,13 +63,18 @@
             <div class="select is-fullwidth">
               <select name="branch">
                 {% for b in branches %}
-                <option value="{{ b }}" {%- if b.as_str() == branch.as_str() %} selected{% endif %}>{{ b }}</option>
+                <option value="{{ b }}" {%- if b.as_str()==branch.as_str() %} selected{% endif %}>{{ b }}</option>
                 {% endfor %}
               </select>
             </div>
           </div>
           <div class="control">
-            <button type="submit" class="button is-primary">Switch branch</button>
+            <button type="submit" class="button is-link">
+              <span class="icon">
+                <i class="fas fa-code-branch"></i>
+              </span>
+              <span>Switch branch</span>
+            </button>
           </div>
         </div>
       </form>

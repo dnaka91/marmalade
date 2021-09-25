@@ -61,7 +61,7 @@ impl GitService {
 pub struct InfoRefsParams {
     #[serde(deserialize_with = "crate::de::percent")]
     user: String,
-    #[serde(deserialize_with = "crate::de::percent")]
+    #[serde(deserialize_with = "crate::de::repo_name")]
     repo: String,
 }
 
@@ -77,10 +77,7 @@ pub async fn info_refs(
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = DIRS.repo_git_dir(
-        &params.user,
-        params.repo.strip_suffix(".git").unwrap_or(&params.repo),
-    );
+    let path = DIRS.repo_git_dir(&params.user, &params.repo);
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);
@@ -112,7 +109,7 @@ pub async fn info_refs(
 pub struct PackParams {
     #[serde(deserialize_with = "crate::de::percent")]
     user: String,
-    #[serde(deserialize_with = "crate::de::percent")]
+    #[serde(deserialize_with = "crate::de::repo_name")]
     repo: String,
     service: GitService,
 }
@@ -124,10 +121,7 @@ pub async fn pack(
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
 
-    let path = DIRS.repo_git_dir(
-        &params.user,
-        params.repo.strip_suffix(".git").unwrap_or(&params.repo),
-    );
+    let path = DIRS.repo_git_dir(&params.user, &params.repo);
 
     if fs::metadata(&path).await.is_err() {
         return Err(StatusCode::NOT_FOUND);

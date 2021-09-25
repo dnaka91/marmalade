@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Form, Path},
+    extract::{Form, Path, Query},
     http::{StatusCode, Uri},
     response::IntoResponse,
 };
@@ -73,6 +73,10 @@ pub struct Tree {
     pub user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     pub repo: String,
+}
+
+#[derive(Deserialize)]
+pub struct TreeQuery {
     pub branch: String,
 }
 
@@ -80,15 +84,17 @@ pub async fn tree(
     user: User,
     uri: Uri,
     Path(tree): Path<Tree>,
+    Query(query): Query<TreeQuery>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?tree.user, ?tree.repo, ?tree.branch, ?uri, "got repo tree request");
+    info!(?tree.user, ?tree.repo, ?query.branch, ?uri, "got repo tree request");
 
     let repo_repo = RepoRepository::for_repo(&tree.user, &tree.repo);
 
     if repo_repo.exists().await && repo_repo.visible(&user.username, &tree.user).await.unwrap() {
+        let branches = repo_repo.list_branches().await.unwrap();
         let repo_tree = {
             let path = (uri.path() != "/").then(|| Utf8Path::new(&uri.path()[1..]));
-            let tree = repo_repo.get_tree_list(&tree.branch, path).await.unwrap();
+            let tree = repo_repo.get_tree_list(&query.branch, path).await.unwrap();
             let mut tree = tree.ok_or(StatusTemplate(StatusCode::NOT_FOUND))?;
 
             match &mut tree.kind {
@@ -114,7 +120,8 @@ pub async fn tree(
             auth_user: Some(user.username),
             user: tree.user,
             repo: tree.repo,
-            branch: tree.branch,
+            branch: query.branch,
+            branches,
             path: Utf8PathBuf::from(uri.path()[1..].to_owned()),
             tree: repo_tree,
         }))

@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
                 .nest(
                     "/:user/:repo",
                     Router::new()
-                    .nest("/tree/:branch", get(handlers::repo::tree))
+                        .nest("/tree", get(handlers::repo::tree))
                         .route("/:service", post(handlers::git::pack))
                         .route("/info/refs", get(handlers::git::info_refs))
                         .route(

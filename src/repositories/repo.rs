@@ -80,6 +80,35 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(true)
     }
 
+    pub async fn list_branches(&self) -> Result<Vec<String>> {
+        if !self.exists().await {
+            return Ok(vec!["master".to_owned()]);
+        }
+
+        let repo_git = DIRS.repo_git_dir(self.user, self.repo);
+        let branches = tokio::task::spawn_blocking(move || -> Result<_> {
+            let repo = Repository::open(&repo_git).context("failed opening repo")?;
+            let branches = repo
+                .branches(Some(BranchType::Local))
+                .context("failed listing branches")?;
+
+            branches
+                .into_iter()
+                .map(|branch| {
+                    let (branch, _) = branch.context("failed iterating branches")?;
+                    Ok(branch
+                        .name()
+                        .context("failed getting branch name")?
+                        .unwrap()
+                        .to_owned())
+                })
+                .collect()
+        })
+        .await??;
+
+        Ok(branches)
+    }
+
     pub async fn get_branch(&self) -> Result<String> {
         if !self.exists().await {
             return Ok("master".to_owned());

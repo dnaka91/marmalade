@@ -24,6 +24,7 @@ pub struct Tree {
     pub user: String,
     pub repo: String,
     pub branch: String,
+    pub branches: Vec<String>,
     pub path: Utf8PathBuf,
     pub tree: RepoTree,
 }
@@ -42,7 +43,7 @@ impl Tree {
     }
 
     fn path_of(&self, file: &str) -> String {
-        let mut base = format!("/{}/{}/tree/{}", self.user, self.repo, self.branch);
+        let mut base = format!("/{}/{}/tree", self.user, self.repo);
         if !self.path.as_str().is_empty() {
             base.push('/');
             base.push_str(self.path.as_str());
@@ -50,6 +51,7 @@ impl Tree {
 
         base.push('/');
         base.push_str(file);
+
         base
     }
 }

@@ -18,7 +18,7 @@
         Content
       </p>
       {% for file in files %}
-      <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}/{{ file.name|urlencode }}">
+      <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ file.name|urlencode }}?branch={{ branch|urlencode }}">
         <span class="panel-icon">
           {% let fa_icon %}
           {% match file.kind %}

@@ -12,13 +12,14 @@
           {% if path.as_str().is_empty() %}
           <li class="is-active"><a class="has-text-success" href="#">{{ branch }}</a></li>
           {% else %}
-          <li><a class="has-text-success" href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}">{{ branch }}</a></li>
+          <li><a class="has-text-success"
+              href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree?branch={{ branch|urlencode }}">{{ branch }}</a></li>
           {% for (name, path) in self.paths() %}
           {% if loop.last %}
           <li class="is-active"><a href="#">{{ name }}</a></li>
           {% else %}
           <li>
-            <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}/{{ path|urlencode }}">
+            <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ path|urlencode }}?branch={{ branch|urlencode }}">
               {{ name }}
             </a>
           </li>
@@ -29,6 +30,27 @@
       </nav>
     </div>
 
+    {% if branches.len() > 1 %}
+    <div class="box">
+      <form>
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <div class="select is-fullwidth">
+              <select name="branch">
+                {% for b in branches %}
+                <option value="{{ b }}" {%- if b.as_str() == branch.as_str() %} selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="control">
+            <button type="submit" class="button is-primary">Switch branch</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
     {% match tree.kind %}
 
     {% when TreeKind::Directory with (files) %}
@@ -38,7 +60,7 @@
       </p>
       {% for file in files %}
 
-      <a class="panel-block" href="{{ self.path_of(file.name)|urlencode }}">
+      <a class="panel-block" href="{{ self.path_of(file.name)|urlencode }}?branch={{ self.branch|urlencode }}">
         <span class="panel-icon">
           {% let fa_icon %}
           {% match file.kind %}

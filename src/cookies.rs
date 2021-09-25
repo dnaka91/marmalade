@@ -23,6 +23,17 @@ impl Cookie {
         Self(cookie.into_owned())
     }
 
+    fn removal<'a>(name: impl Into<Cow<'a, str>>) -> Self {
+        let mut cookie = cookie::Cookie::new(name, "");
+        cookie.set_path("/");
+        cookie.set_same_site(cookie::SameSite::Strict);
+        cookie.set_http_only(true);
+        cookie.set_secure(true);
+        cookie.make_removal();
+
+        Self(cookie.into_owned())
+    }
+
     pub fn value(&self) -> &str {
         self.0.value()
     }
@@ -43,10 +54,9 @@ impl Cookies {
     }
 
     pub fn remove(&mut self, name: &str) {
-        let mut cookie = cookie::Cookie::new(name, "");
-        cookie.make_removal();
-
-        self.jar.private_mut(&self.key).remove(cookie.into_owned());
+        self.jar
+            .private_mut(&self.key)
+            .remove(Cookie::removal(name).0);
     }
 
     pub fn delta(&self) -> impl Iterator<Item = impl Display + '_> + '_ {

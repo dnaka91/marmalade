@@ -9,7 +9,7 @@ use pulldown_cmark::{CodeBlockKind, Event, Tag};
 use serde::Deserialize;
 use syntect::{
     html::{ClassStyle, ClassedHTMLGenerator},
-    parsing::{SyntaxReference, SyntaxSet},
+    parsing::{SyntaxDefinition, SyntaxReference, SyntaxSet},
     util::LinesWithEndings,
 };
 use tracing::info;
@@ -210,7 +210,18 @@ pub async fn delete_post(
     Ok(redirect::to_user_index(&path.user))
 }
 
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(SyntaxSet::load_defaults_newlines);
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
+    let mut builder = SyntaxSet::load_defaults_newlines().into_builder();
+    builder.add(
+        SyntaxDefinition::load_from_str(
+            include_str!("../../assets/TOML.sublime-syntax"),
+            true,
+            Some("TOML"),
+        )
+        .unwrap(),
+    );
+    builder.build()
+});
 
 #[allow(clippy::option_if_let_else)]
 fn render_markdown(text: &str) -> String {

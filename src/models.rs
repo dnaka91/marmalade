@@ -24,3 +24,14 @@ pub enum FileKind {
     Directory,
     File,
 }
+
+pub struct RepoTree {
+    pub name: String,
+    pub kind: TreeKind,
+}
+
+pub enum TreeKind {
+    Directory(Vec<RepoFile>),
+    Text(String),
+    Binary(usize),
+}

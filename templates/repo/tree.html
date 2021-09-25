@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "../nav.html" %}
+<section class="section">
+  <div class="container">
+    <div class="box">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/{{ user|urlencode }}">{{ user }}</a></li>
+          <li><a href="/{{ user|urlencode }}/{{ repo|urlencode }}">{{ repo }}</a></li>
+          {% if path.as_str().is_empty() %}
+          <li class="is-active"><a class="has-text-success" href="#">{{ branch }}</a></li>
+          {% else %}
+          <li><a class="has-text-success" href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}">{{ branch }}</a></li>
+          {% for (name, path) in self.paths() %}
+          {% if loop.last %}
+          <li class="is-active"><a href="#">{{ name }}</a></li>
+          {% else %}
+          <li>
+            <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}/{{ path|urlencode }}">
+              {{ name }}
+            </a>
+          </li>
+          {% endif %}
+          {% endfor %}
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+
+    {% match tree.kind %}
+
+    {% when TreeKind::Directory with (files) %}
+    <nav class="panel">
+      <p class="panel-heading">
+        Content
+      </p>
+      {% for file in files %}
+
+      <a class="panel-block" href="{{ self.path_of(file.name)|urlencode }}">
+        <span class="panel-icon">
+          {% let fa_icon %}
+          {% match file.kind %}
+          {% when FileKind::Directory %}
+          {% let fa_icon = "fa-folder has-text-info" %}
+          {% when FileKind::File %}
+          {% let fa_icon = "fa-file" %}
+          {% endmatch %}
+          <i class="fas {{ fa_icon }}" aria-hidden="true"></i>
+        </span>
+        {{ file.name }}
+      </a>
+      {% endfor %}
+    </nav>
+
+    {% when TreeKind::Text with (content) %}
+    <div class="box">
+      <h1 class="title">{{ tree.name }}</h1>
+      <pre class="highlight-code"><code>{{ content|safe }}</code></pre>
+    </div>
+
+    <link rel="stylesheet" href="/highlight.css">
+
+    {% when TreeKind::Binary with (size) %}
+    <div class="box">
+      {{ tree.name }} ({{ size }} bytes)
+    </div>
+
+    {% endmatch %}
+  </div>
+</section>
+{% endblock content %}

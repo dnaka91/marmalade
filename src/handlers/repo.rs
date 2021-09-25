@@ -1,8 +1,9 @@
 use axum::{
     extract::{Form, Path},
-    http::StatusCode,
+    http::{StatusCode, Uri},
     response::IntoResponse,
 };
+use camino::{Utf8Path, Utf8PathBuf};
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Event, Tag};
 use serde::Deserialize;
@@ -16,6 +17,7 @@ use tracing::info;
 use crate::{
     cookies::{Cookie, Cookies},
     extract::User,
+    models::TreeKind,
     redirect,
     repositories::{RepoRepository, UserRepository},
     response::{HtmlTemplate, SetCookies, StatusTemplate},
@@ -46,6 +48,7 @@ pub async fn index(
             files
         };
 
+        let branch = repo_repo.get_branch().await.unwrap();
         let readme = repo_repo.get_readme().await.unwrap().map_or_else(
             || "No project readme available".to_owned(),
             |readme| render_markdown(&readme),
@@ -55,8 +58,65 @@ pub async fn index(
             auth_user: Some(user.username),
             user: path.user,
             repo: path.repo,
+            branch,
             files,
             readme,
+        }))
+    } else {
+        Err(StatusTemplate(StatusCode::NOT_FOUND))
+    }
+}
+
+#[derive(Deserialize)]
+pub struct Tree {
+    #[serde(deserialize_with = "crate::de::percent")]
+    pub user: String,
+    #[serde(deserialize_with = "crate::de::repo_name")]
+    pub repo: String,
+    pub branch: String,
+}
+
+pub async fn tree(
+    user: User,
+    uri: Uri,
+    Path(tree): Path<Tree>,
+) -> Result<impl IntoResponse, StatusTemplate> {
+    info!(?tree.user, ?tree.repo, ?tree.branch, ?uri, "got repo tree request");
+
+    let repo_repo = RepoRepository::for_repo(&tree.user, &tree.repo);
+
+    if repo_repo.exists().await && repo_repo.visible(&user.username, &tree.user).await.unwrap() {
+        let repo_tree = {
+            let path = (uri.path() != "/").then(|| Utf8Path::new(&uri.path()[1..]));
+            let tree = repo_repo.get_tree_list(&tree.branch, path).await.unwrap();
+            let mut tree = tree.ok_or(StatusTemplate(StatusCode::NOT_FOUND))?;
+
+            match &mut tree.kind {
+                TreeKind::Directory(files) => {
+                    files.sort_by_key(|file| file.kind);
+                }
+                TreeKind::Text(text) => {
+                    if let Some(ext) = Utf8Path::new(&tree.name).extension() {
+                        let syntax = SYNTAX_SET
+                            .find_syntax_by_extension(ext)
+                            .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+
+                        *text = highlight_code(text, syntax);
+                    }
+                }
+                TreeKind::Binary(_) => {}
+            }
+
+            tree
+        };
+
+        Ok(HtmlTemplate(templates::repo::Tree {
+            auth_user: Some(user.username),
+            user: tree.user,
+            repo: tree.repo,
+            branch: tree.branch,
+            path: Utf8PathBuf::from(uri.path()[1..].to_owned()),
+            tree: repo_tree,
         }))
     } else {
         Err(StatusTemplate(StatusCode::NOT_FOUND))

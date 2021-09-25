@@ -2,8 +2,9 @@ use std::str::FromStr;
 
 use anyhow::bail;
 use askama::Template;
+use camino::Utf8PathBuf;
 
-use crate::models::{FileKind, RepoFile};
+use crate::models::{FileKind, RepoFile, RepoTree, TreeKind};
 
 #[derive(Template)]
 #[template(path = "repo/index.html")]
@@ -11,8 +12,46 @@ pub struct Index {
     pub auth_user: Option<String>,
     pub user: String,
     pub repo: String,
+    pub branch: String,
     pub files: Vec<RepoFile>,
     pub readme: String,
+}
+
+#[derive(Template)]
+#[template(path = "repo/tree.html")]
+pub struct Tree {
+    pub auth_user: Option<String>,
+    pub user: String,
+    pub repo: String,
+    pub branch: String,
+    pub path: Utf8PathBuf,
+    pub tree: RepoTree,
+}
+
+impl Tree {
+    fn paths(&self) -> Vec<(&str, Utf8PathBuf)> {
+        let mut current = Utf8PathBuf::new();
+        let mut paths = Vec::new();
+
+        for comp in self.path.components() {
+            current.push(comp.as_str());
+            paths.push((comp.as_str(), current.clone()));
+        }
+
+        paths
+    }
+
+    fn path_of(&self, file: &str) -> String {
+        let mut base = format!("/{}/{}/tree/{}", self.user, self.repo, self.branch);
+        if !self.path.as_str().is_empty() {
+            base.push('/');
+            base.push_str(self.path.as_str());
+        }
+
+        base.push('/');
+        base.push_str(file);
+        base
+    }
 }
 
 #[derive(Template)]

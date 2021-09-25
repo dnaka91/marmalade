@@ -8,7 +8,7 @@
       <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>
           <li><a href="/{{ user|urlencode }}">{{ user }}</a></li>
-          <li class="is-active"><a href="#" aria-current="page">{{ repo }}</a></li>
+          <li class="is-active"><a href="#">{{ repo }}</a></li>
         </ul>
       </nav>
     </div>
@@ -18,7 +18,7 @@
         Content
       </p>
       {% for file in files %}
-      <a class="panel-block">
+      <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/{{ branch|urlencode }}/{{ file.name|urlencode }}">
         <span class="panel-icon">
           {% let fa_icon %}
           {% match file.kind %}

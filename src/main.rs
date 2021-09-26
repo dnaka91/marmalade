@@ -16,6 +16,7 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
+mod assets;
 mod cookies;
 mod de;
 mod dirs;
@@ -71,9 +72,10 @@ async fn main() -> Result<()> {
                         .route("/", get(handlers::repo::index)),
                 )
                 .route("/:user", get(handlers::user::index))
-                .route("/highlight.css", get(handlers::highlight_css))
-                .route("/favicon-16x16.png", get(handlers::favicon_16))
-                .route("/favicon-32x32.png", get(handlers::favicon_32))
+                .nest(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
+                .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
+                .route("/favicon-16x16.png", get(handlers::assets::favicon_16))
+                .route("/favicon-32x32.png", get(handlers::assets::favicon_32))
                 .route("/users", get(handlers::user::list))
                 .route(
                     "/repo/create",

@@ -6,7 +6,7 @@ WORKDIR /volume
 COPY assets/ assets/
 COPY src/ src/
 COPY templates/ templates/
-COPY Cargo.lock Cargo.toml ./
+COPY build.rs Cargo.lock Cargo.toml ./
 
 RUN --mount=type=cache,target=/root/.cargo/git \
     --mount=type=cache,target=/root/.cargo/registry \

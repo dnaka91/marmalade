@@ -20,9 +20,9 @@ pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<Box
         CONTENT_SECURITY_POLICY,
         HeaderValue::from_static(
             "default-src 'none'; \
-            font-src https://cdn.jsdelivr.net; \
-            img-src 'self' https://cdn.jsdelivr.net; \
-            style-src 'self' https://cdn.jsdelivr.net;",
+            font-src 'self'; \
+            img-src 'self'; \
+            style-src 'self';",
         ),
     );
     headers.append(REFERRER_POLICY, "same-origin".parse().unwrap());

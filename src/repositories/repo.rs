@@ -1,4 +1,4 @@
-use std::{borrow::ToOwned, str};
+use std::{borrow::ToOwned, io::BufRead, str};
 
 use anyhow::{Context, Result};
 use camino::Utf8Path;
@@ -123,7 +123,11 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
                     name.strip_prefix("refs/heads/").unwrap_or(name).to_owned()
                 }
                 Err(e) if e.code() == ErrorCode::UnbornBranch => {
-                    let head = std::fs::read_to_string(repo_git.join("HEAD"))?;
+                    let file = std::fs::File::open(repo_git.join("HEAD"))?;
+                    let file = std::io::BufReader::new(file);
+
+                    let head = file.lines().next().context("repo's HEAD file is empty")??;
+
                     match head.strip_prefix("ref: refs/heads/") {
                         Some(head) => head.to_owned(),
                         None => head,

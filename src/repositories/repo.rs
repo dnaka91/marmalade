@@ -353,18 +353,9 @@ fn repo_tree_from_tree(name: &str, tree: &Tree<'_>) -> RepoTree {
 }
 
 fn repo_tree_from_blob(name: &str, blob: &Blob<'_>) -> RepoTree {
-    let mime = mime_guess::from_path(name).first_or_text_plain();
-    let binary = match mime.type_() {
-        mime::AUDIO | mime::FONT | mime::IMAGE | mime::VIDEO => true,
-        mime::APPLICATION => {
-            matches!(mime.subtype(), mime::OCTET_STREAM | mime::PDF)
-        }
-        _ => false,
-    };
-
     RepoTree {
         name: name.to_owned(),
-        kind: if binary {
+        kind: if blob.is_binary() {
             TreeKind::Binary(blob.size())
         } else {
             match str::from_utf8(blob.content()) {

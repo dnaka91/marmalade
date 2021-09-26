@@ -38,13 +38,14 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(!self.load_info().await?.private)
     }
 
-    pub async fn create(&self, private: bool) -> Result<bool> {
+    pub async fn create(&self, description: String, private: bool) -> Result<bool> {
         if self.exists().await {
             return Ok(false);
         }
 
         let data = serde_json::to_vec_pretty(&UserRepo {
             name: self.repo.to_owned(),
+            description,
             private,
         })?;
 

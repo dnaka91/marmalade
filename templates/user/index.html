@@ -26,9 +26,14 @@
         </a>
       </div>
       {% endif %}
-      {% for repo in repos %}
+      {% for (repo, description) in repos %}
       <a class="panel-block" href="/{{ user|urlencode }}/{{ repo|urlencode }}">
-        {{ repo }}
+        <span class="has-text-weight-medium">{{ repo }}</span>
+
+        {% if !description.is_empty() %}
+        &nbsp;-&nbsp;
+        <span class="has-text-weight-light is-size-6">{{ description }}</span>
+        {% endif %}
       </a>
       {% endfor %}
     </nav>

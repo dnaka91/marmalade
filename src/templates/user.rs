@@ -5,7 +5,7 @@ use askama::Template;
 pub struct Index {
     pub auth_user: Option<String>,
     pub user: String,
-    pub repos: Vec<String>,
+    pub repos: Vec<(String, String)>,
 }
 
 impl Index {

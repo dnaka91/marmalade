@@ -55,6 +55,16 @@
         </div>
 
         <div class="field">
+          <label class="label" for="description">Description</label>
+          <div class="control">
+            <textarea class="textarea" id="description" name="description" rows="2">
+              {{- settings.description -}}
+            </textarea>
+          </div>
+        </div>
+
+        {% if branches.len() > 1 %}
+        <div class="field">
           <label class="label" for="branch">Branch</label>
           <div class="control">
             <div class="select">
@@ -66,6 +76,7 @@
             </div>
           </div>
         </div>
+        {% endif %}
 
         <div class="field">
           <div class="control">

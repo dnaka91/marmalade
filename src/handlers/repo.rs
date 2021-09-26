@@ -145,6 +145,7 @@ pub async fn create(_user: User, mut cookies: Cookies) -> impl IntoResponse {
 #[derive(Deserialize)]
 pub struct Create {
     name: String,
+    description: String,
     #[serde(default, deserialize_with = "crate::de::form_bool")]
     private: bool,
 }
@@ -167,7 +168,7 @@ pub async fn create_post(
     let user_repo = UserRepository::for_user(&user.username);
     let created = user_repo
         .repo(&create.name)
-        .create(create.private)
+        .create(create.description, create.private)
         .await
         .unwrap();
 
@@ -258,7 +259,8 @@ pub async fn settings(
 
 #[derive(Deserialize)]
 pub struct Settings {
-    branch: String,
+    description: String,
+    branch: Option<String>,
     #[serde(default, deserialize_with = "crate::de::form_bool")]
     private: bool,
 }
@@ -277,13 +279,16 @@ pub async fn settings_post(
         return Err(StatusTemplate(StatusCode::NOT_FOUND));
     }
 
-    let current = repo_repo.get_branch().await.unwrap();
-    if current != settings.branch {
-        repo_repo.set_branch(&settings.branch).await.unwrap();
+    if let Some(branch) = settings.branch {
+        let current = repo_repo.get_branch().await.unwrap();
+        if current != branch {
+            repo_repo.set_branch(&branch).await.unwrap();
+        }
     }
 
     let mut current = repo_repo.load_info().await.unwrap();
-    if current.private != settings.private {
+    if current.description != settings.description || current.private != settings.private {
+        current.description = settings.description;
         current.private = settings.private;
         repo_repo.save_info(&current).await.unwrap();
     }

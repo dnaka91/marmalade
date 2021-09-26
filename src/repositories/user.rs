@@ -107,7 +107,7 @@ impl<'a> UserRepository<'a> {
         Ok(names)
     }
 
-    pub async fn list_repo_names(&self, auth_user: &str) -> Result<Vec<String>> {
+    pub async fn list_repo_names(&self, auth_user: &str) -> Result<Vec<(String, String)>> {
         let mut entries = fs::read_dir(DIRS.user_repos_dir(self.user)).await?;
         let mut names = Vec::new();
 
@@ -118,7 +118,8 @@ impl<'a> UserRepository<'a> {
             let repo_repo = self.repo(file_name);
 
             if repo_repo.exists().await && repo_repo.visible(auth_user, self.user).await? {
-                names.push(path.file_name().unwrap().to_owned());
+                let description = repo_repo.load_info().await.unwrap().description;
+                names.push((path.file_name().unwrap().to_owned(), description));
             }
         }
 

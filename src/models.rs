@@ -11,6 +11,8 @@ pub struct UserAccount {
 #[derive(Serialize, Deserialize)]
 pub struct UserRepo {
     pub name: String,
+    #[serde(default)]
+    pub description: String,
     pub private: bool,
 }
 

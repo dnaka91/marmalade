@@ -81,6 +81,7 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
     quote! {
         pub const MAIN_CSS_CONTENT: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
         pub const MAIN_CSS_ROUTE: &str = #route;
+        #[allow(clippy::declare_interior_mutable_const)]
         pub const MAIN_CSS_HASH: Lazy<ETag> =Lazy::new(|| #etag.parse().unwrap());
     }
 }
@@ -123,6 +124,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
         pub const WEBFONTS_ROUTE: &str = #base_route;
         pub const WEBFONTS_CONTENT: &[&[u8]] = &[#(#contents),*];
         pub const WEBFONTS_NAME: &[&str] = &[#(#names),*];
+        #[allow(clippy::declare_interior_mutable_const)]
         pub const WEBFONTS_HASH: Lazy<Vec<ETag>> = Lazy::new(|| {
             [#(#hashes),*].iter().map(|&hash| hash.parse().unwrap()).collect()
         });

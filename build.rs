@@ -47,14 +47,14 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
         @charset "utf-8";
 
         $fa-font-path: "{}";
-        @import "{}/assets/main.sass";
+        @import "assets/main.sass";
 
         /*!
          * Syntect themes
          */
         {}
         "#,
-        webfonts_route, root, highlight
+        webfonts_route, highlight
     };
 
     let css = sass_rs::compile_string(

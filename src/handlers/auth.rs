@@ -7,7 +7,7 @@ use crate::{
     cookies::{Cookie, Cookies},
     extract::User,
     redirect,
-    repositories::UserRepository,
+    repositories::{CreateUser, UserRepository},
     response::{HtmlTemplate, SetCookies},
     session::{COOKIE_ERROR, COOKIE_SESSION, COOKIE_USERNAME},
     templates, validate,
@@ -114,7 +114,12 @@ pub async fn register_post(Form(login): Form<Register>, mut cookies: Cookies) ->
 
     let user_repo = UserRepository::for_user(&login.username);
     let created = user_repo
-        .create_user(&login.password, login.private, false)
+        .create_user(CreateUser {
+            password: &login.password,
+            description: None,
+            private: login.private,
+            admin: false,
+        })
         .await
         .unwrap();
 

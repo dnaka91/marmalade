@@ -54,6 +54,15 @@ pub fn to_user_index(user: &str) -> Redirect {
     Redirect::to(format!("/{}", user).parse().unwrap())
 }
 
+pub fn to_user_settings(user: &str) -> Redirect {
+    let user = Cow::from(percent_encoding::utf8_percent_encode(
+        user,
+        NON_ALPHANUMERIC,
+    ));
+
+    Redirect::to(format!("/{}/settings", user).parse().unwrap())
+}
+
 #[cfg(test)]
 mod tests {
     use axum::{http::header::LOCATION, response::IntoResponse};
@@ -90,6 +99,7 @@ mod tests {
             get_location(to_repo_settings("hello", "world"))
         );
         assert_eq!("/hello", get_location(to_user_index("hello")));
+        assert_eq!("/hello/settings", get_location(to_user_settings("hello")));
     }
 
     #[test]
@@ -111,6 +121,10 @@ mod tests {
         assert_eq!(
             "/h%C3%A9%20llo%0A%F0%9F%91%8D",
             get_location(to_user_index("h\u{e9} llo\n\u{1f44d}"))
+        );
+        assert_eq!(
+            "/h%C3%A9%20llo%0A%F0%9F%91%8D/settings",
+            get_location(to_user_settings("h\u{e9} llo\n\u{1f44d}"))
         );
     }
 }

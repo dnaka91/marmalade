@@ -1,4 +1,7 @@
-pub use self::{repo::RepoRepository, user::UserRepository};
+pub use self::{
+    repo::RepoRepository,
+    user::{CreateUser, UserRepository},
+};
 
 mod repo;
 mod user;

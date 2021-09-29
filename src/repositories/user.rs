@@ -37,16 +37,17 @@ impl<'a> UserRepository<'a> {
         Ok(!self.load_info().await?.private)
     }
 
-    pub async fn create_user(&self, password: &str, private: bool, admin: bool) -> Result<bool> {
+    pub async fn create_user(&self, info: CreateUser<'_>) -> Result<bool> {
         if self.exists().await {
             return Ok(false);
         }
 
         let data = serde_json::to_vec_pretty(&UserAccount {
             username: self.user.to_owned(),
-            password: hash_password(password)?,
-            private,
-            admin,
+            password: hash_password(info.password)?,
+            description: info.description.unwrap_or_default().to_owned(),
+            private: info.private,
+            admin: info.admin,
         })?;
 
         fs::create_dir_all(DIRS.user_dir(self.user)).await?;
@@ -145,10 +146,39 @@ impl<'a> UserRepository<'a> {
         Ok(())
     }
 
-    async fn load_info(&self) -> Result<UserAccount> {
+    pub async fn load_info(&self) -> Result<UserAccount> {
         let data = fs::read(DIRS.user_info_file(self.user)).await?;
         serde_json::from_slice(&data).map_err(Into::into)
     }
+
+    pub async fn save_info(&self, info: &UserAccount) -> Result<()> {
+        let real_file = DIRS.user_info_file(self.user);
+        let temp_file = DIRS.user_info_temp_file(self.user);
+
+        let buf = serde_json::to_vec_pretty(info)?;
+        fs::write(&temp_file, &buf).await?;
+        fs::rename(temp_file, real_file).await?;
+
+        Ok(())
+    }
+
+    pub async fn change_password(&self, password: &str) -> Result<()> {
+        let mut info = self.load_info().await?;
+        info.password = hash_password(password)?;
+
+        self.save_info(&info).await?;
+        self.edit_tokens(|tokens| {
+            tokens.clear();
+        })
+        .await
+    }
+}
+
+pub struct CreateUser<'a> {
+    pub password: &'a str,
+    pub description: Option<&'a str>,
+    pub private: bool,
+    pub admin: bool,
 }
 
 fn hash_password(password: &str) -> Result<String> {

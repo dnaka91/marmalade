@@ -4,6 +4,26 @@
 {% include "../nav.html" %}
 <section class="section">
   <div class="container">
+
+    {% if self.auth_same_user() %}
+    <div class="tabs is-toggle is-fullwidth">
+      <ul>
+        <li class="is-active">
+          <a>
+            <span class="icon is-small"><i class="fas fa-info-circle" aria-hidden="true"></i></span>
+            <span>Info</span>
+          </a>
+        </li>
+        <li>
+          <a href="/{{ user|urlencode }}/settings">
+            <span class="icon is-small"><i class="fas fa-cogs" aria-hidden="true"></i></span>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+
     <div class="box">
       <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>

@@ -56,22 +56,32 @@ async fn main() -> Result<()> {
         .serve(
             Router::new()
                 .nest(
-                    "/:user/:repo",
+                    "/:user",
                     Router::new()
-                        .nest("/tree", get(handlers::repo::tree))
-                        .route("/:service", post(handlers::git::pack))
-                        .route("/info/refs", get(handlers::git::info_refs))
-                        .route(
-                            "/delete",
-                            get(handlers::repo::delete).post(handlers::repo::delete_post),
+                        .nest(
+                            "/:repo",
+                            Router::new()
+                                .nest("/tree", get(handlers::repo::tree))
+                                .route("/:service", post(handlers::git::pack))
+                                .route("/info/refs", get(handlers::git::info_refs))
+                                .route(
+                                    "/delete",
+                                    get(handlers::repo::delete).post(handlers::repo::delete_post),
+                                )
+                                .route(
+                                    "/settings",
+                                    get(handlers::repo::settings)
+                                        .post(handlers::repo::settings_post),
+                                )
+                                .route("/", get(handlers::repo::index)),
                         )
+                        .route("/password", post(handlers::user::password_post))
                         .route(
                             "/settings",
-                            get(handlers::repo::settings).post(handlers::repo::settings_post),
+                            get(handlers::user::settings).post(handlers::user::settings_post),
                         )
-                        .route("/", get(handlers::repo::index)),
+                        .route("/", get(handlers::user::index)),
                 )
-                .route("/:user", get(handlers::user::index))
                 .nest(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
                 .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
                 .route("/favicon-16x16.png", get(handlers::assets::favicon_16))

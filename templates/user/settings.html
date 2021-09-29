@@ -8,15 +8,9 @@
     <div class="tabs is-toggle is-fullwidth">
       <ul>
         <li>
-          <a href="/{{ user|urlencode }}/{{ repo|urlencode }}">
+          <a href="/{{ user|urlencode }}">
             <span class="icon is-small"><i class="fas fa-info-circle" aria-hidden="true"></i></span>
             <span>Info</span>
-          </a>
-        </li>
-        <li>
-          <a href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree?branch={{ branch|urlencode }}">
-            <span class="icon is-small"><i class="fas fa-tree" aria-hidden="true"></i></span>
-            <span>Tree</span>
           </a>
         </li>
         <li class="is-active">
@@ -30,27 +24,38 @@
 
     {% match message %}
     {% when Some with (m) %}
-    <div class="notification is-success">
+
+    {% let color %}
+    {% if m == UserSettingsMessage::Success %}
+    {% let color = "is-success" %}
+    {% else %}
+    {% let color = "is-danger is-light" %}
+    {% endif %}
+    <div class="notification {{ color }}">
       {% match m %}
-      {% when RepoSettingsMessage::Success %}
+      {% when UserSettingsMessage::Success %}
       Changes successfully saved!
+      {% when UserSettingsMessage::InvalidPassword %}
+      Password must be at least 6 characters long.
       {% endmatch %}
     </div>
     {%- when None -%}
     {% endmatch %}
 
     <div class="box">
+      <h4 class="title is-4">Update information</h4>
 
       <div class="notification">
-        The repository <strong>name</strong> can't be changed, once created. Please create a new
-        repo and push to it again to change the name.
+        The user <strong>name</strong> can't be changed, once created. Please create a new
+        user to change the name.
       </div>
 
-      <form method="POST">
+      <form method="POST" action="/{{ user|urlencode }}/settings">
+
         <div class="field">
           <label class="label" for="name">Name</label>
           <div class="control">
-            <input class="input" type="text" id="name" value="{{ settings.name }}" readonly>
+            <input class="input" type="text" id="name" value="{{ settings.username }}" readonly>
           </div>
         </div>
 
@@ -63,26 +68,11 @@
           </div>
         </div>
 
-        {% if branches.len() > 1 %}
-        <div class="field">
-          <label class="label" for="branch">Branch</label>
-          <div class="control">
-            <div class="select">
-              <select id="branch" name="branch">
-                {% for b in branches %}
-                <option value="{{ b }}" {%- if b.as_str()==branch.as_str() %} selected{% endif %}>{{ b }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
         <div class="field">
           <div class="control">
             <label class="checkbox">
               <input type="checkbox" id="private" name="private" {%- if settings.private %} checked{% endif %}>
-              Private visibility (only you and admins can see the repo)
+              Private visibility (only admins can see you)
             </label>
           </div>
         </div>
@@ -92,6 +82,27 @@
             <i class="fas fa-save"></i>
           </span>
           <span>Save</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="box">
+      <h4 class="title is-4">Change password</h4>
+
+      <form method="POST" action="/{{ user|urlencode }}/password">
+
+        <div class="field">
+          <label class="label" for="name">New password</label>
+          <div class="control">
+            <input class="input" type="password" id="password" name="password" placeholder="******" required>
+          </div>
+        </div>
+
+        <button class="button is-danger">
+          <span class="icon">
+            <i class="fas fa-key"></i>
+          </span>
+          <span>Change</span>
         </button>
       </form>
     </div>

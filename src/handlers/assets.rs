@@ -1,6 +1,6 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use axum::{
     extract::TypedHeader,
@@ -12,6 +12,9 @@ use headers::{
 };
 
 use crate::assets;
+
+/// Max age setting for the `Cache-Control` header, currently set to **2 years**.
+const CACHE_MAX_AGE: Duration = Duration::from_secs(63_072_000);
 
 pub async fn favicon_32() -> impl IntoResponse {
     include_bytes!("../../assets/favicon-32x32.png").as_ref()
@@ -30,7 +33,11 @@ pub async fn main_css(
 
     let mut headers = HeaderMap::with_capacity(4);
     headers.typed_insert(ContentType::from(mime::TEXT_CSS));
-    headers.typed_insert(CacheControl::new().with_public());
+    headers.typed_insert(
+        CacheControl::new()
+            .with_public()
+            .with_max_age(CACHE_MAX_AGE),
+    );
     headers.typed_insert(assets::MAIN_CSS_HASH.clone());
     headers.typed_insert(LastModified::from(SystemTime::UNIX_EPOCH));
 
@@ -56,7 +63,11 @@ pub async fn webfonts(
 
     let mut headers = HeaderMap::with_capacity(4);
     headers.typed_insert(ContentType::from(mime::TEXT_CSS));
-    headers.typed_insert(CacheControl::new().with_public());
+    headers.typed_insert(
+        CacheControl::new()
+            .with_public()
+            .with_max_age(CACHE_MAX_AGE),
+    );
     headers.typed_insert(assets::WEBFONTS_HASH[index].clone());
     headers.typed_insert(LastModified::from(SystemTime::UNIX_EPOCH));
 

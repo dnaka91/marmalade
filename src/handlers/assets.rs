@@ -62,7 +62,7 @@ pub async fn webfonts(
     let unmatched = if_none_match.map(|v| v.precondition_passes(&assets::WEBFONTS_HASH[index]));
 
     let mut headers = HeaderMap::with_capacity(4);
-    headers.typed_insert(ContentType::from(mime::TEXT_CSS));
+    headers.typed_insert(ContentType::from(mime::FONT_WOFF2));
     headers.typed_insert(
         CacheControl::new()
             .with_public()

@@ -14,6 +14,8 @@ use crate::{
 };
 
 pub async fn login(mut cookies: Cookies) -> impl IntoResponse {
+    info!("got auth login request");
+
     let error = cookies
         .get(COOKIE_ERROR)
         .and_then(|cookie| cookie.value().parse().ok());
@@ -32,7 +34,7 @@ pub struct Login {
 }
 
 pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
-    info!(?login.username, "got login request");
+    info!(?login.username, "got auth login request");
 
     if login.username.is_empty() || login.password.is_empty() {
         cookies.add(Cookie::new(
@@ -62,7 +64,7 @@ pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl 
 }
 
 pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
-    info!(?user.username, "got logout request");
+    info!(?user.username, "got auth logout request");
 
     let user_repo = UserRepository::for_user(&user.username);
     user_repo.remove_token(user.token).await.unwrap();
@@ -74,6 +76,8 @@ pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
 }
 
 pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
+    info!("got auth register request");
+
     let error = cookies
         .get(COOKIE_ERROR)
         .and_then(|cookie| cookie.value().parse().ok());
@@ -94,7 +98,7 @@ pub struct Register {
 }
 
 pub async fn register_post(Form(login): Form<Register>, mut cookies: Cookies) -> impl IntoResponse {
-    info!(?login.username, "got register request");
+    info!(?login.username, "got auth register request");
 
     if !validate::username(&login.username) {
         cookies.add(Cookie::new(

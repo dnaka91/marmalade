@@ -86,7 +86,7 @@ pub async fn tree(
     Path(tree): Path<Tree>,
     Query(query): Query<TreeQuery>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?tree.user, ?tree.repo, ?query.branch, ?uri, "got repo tree request");
+    info!(?user.username, ?tree.user, ?tree.repo, ?query.branch, "got repo tree request");
 
     let repo_repo = RepoRepository::for_repo(&tree.user, &tree.repo);
 
@@ -130,7 +130,9 @@ pub async fn tree(
     }
 }
 
-pub async fn create(_user: User, mut cookies: Cookies) -> impl IntoResponse {
+pub async fn create(user: User, mut cookies: Cookies) -> impl IntoResponse {
+    info!(?user.username, "got repo create request");
+
     let error = cookies
         .get(COOKIE_ERROR)
         .and_then(|cookie| cookie.value().parse().ok());

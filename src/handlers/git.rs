@@ -75,7 +75,12 @@ pub async fn info_refs(
     Path(params): Path<InfoRefsParams>,
     Query(query): Query<InfoRefsQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
+    info!(
+        auth_user = ?auth.username,
+        user = ?params.user,
+        repo = ?params.repo,
+        "got git info-refs request",
+    );
 
     let path = DIRS.repo_git_dir(&params.user, &params.repo);
 
@@ -119,7 +124,12 @@ pub async fn pack(
     Path(params): Path<PackParams>,
     body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
-    info!(auth_user = ?auth.username, user = ?params.user, repo = ?params.repo, "got request");
+    info!(
+        auth_user = ?auth.username,
+        user = ?params.user,
+        repo = ?params.repo,
+        "got git pack request",
+    );
 
     let path = DIRS.repo_git_dir(&params.user, &params.repo);
 

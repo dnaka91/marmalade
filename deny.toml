@@ -4,8 +4,3 @@ allow-osi-fsf-free = "both"
 exceptions = [
     { allow = ["AGPL-3.0"], name = "marmalade", version = "*" },
 ]
-
-[bans]
-skip = [
-    { name = "time", version = "=0.1.43" },
-]

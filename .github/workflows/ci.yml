@@ -17,8 +17,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
-          override: true
       - name: Configure cache
         uses: Swatinem/rust-cache@v1
       - name: Test
@@ -45,8 +43,8 @@ jobs:
       - name: Setup Rust (stable)
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          override: true
+          profile: minimal
+          components: clippy
       - name: Configure cache
         uses: Swatinem/rust-cache@v1
       - name: Run clippy

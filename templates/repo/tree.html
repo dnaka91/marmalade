@@ -37,7 +37,7 @@
           <li class="is-active"><a class="has-text-success" href="#">{{ branch }}</a></li>
           {% else %}
           <li><a class="has-text-success"
-              href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree?branch={{ branch|urlencode }}">{{ branch }}</a></li>
+              href="/{{ user|urlencode }}/{{ repo|urlencode }}/tree/?branch={{ branch|urlencode }}">{{ branch }}</a></li>
           {% for (name, path) in self.paths() %}
           {% if loop.last %}
           <li class="is-active"><a href="#">{{ name }}</a></li>

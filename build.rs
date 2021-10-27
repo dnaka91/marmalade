@@ -119,9 +119,10 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
     }
 
     let base_route = format!("/webfonts-{:016x}", folder_hash.finish());
+    let route = format!("{}/*path", base_route);
 
     let syntax = quote! {
-        pub const WEBFONTS_ROUTE: &str = #base_route;
+        pub const WEBFONTS_ROUTE: &str = #route;
         pub const WEBFONTS_CONTENT: &[&[u8]] = &[#(#contents),*];
         pub const WEBFONTS_NAME: &[&str] = &[#(#names),*];
         #[allow(clippy::declare_interior_mutable_const)]

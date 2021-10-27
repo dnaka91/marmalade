@@ -1,6 +1,6 @@
 use axum::{
     extract::{Form, Path, Query},
-    http::{StatusCode, Uri},
+    http::StatusCode,
     response::IntoResponse,
 };
 use camino::{Utf8Path, Utf8PathBuf};
@@ -27,7 +27,6 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct BasePath {
-    #[serde(deserialize_with = "crate::de::percent")]
     pub user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     pub repo: String,
@@ -69,10 +68,10 @@ pub async fn index(
 
 #[derive(Deserialize)]
 pub struct Tree {
-    #[serde(deserialize_with = "crate::de::percent")]
     pub user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     pub repo: String,
+    pub path: String,
 }
 
 #[derive(Deserialize)]
@@ -82,18 +81,17 @@ pub struct TreeQuery {
 
 pub async fn tree(
     user: User,
-    uri: Uri,
     Path(tree): Path<Tree>,
     Query(query): Query<TreeQuery>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?user.username, ?tree.user, ?tree.repo, ?query.branch, "got repo tree request");
+    info!(?user.username, ?tree.user, ?tree.repo, ?tree.path, ?query.branch, "got repo tree request");
 
     let repo_repo = RepoRepository::for_repo(&tree.user, &tree.repo);
 
     if repo_repo.exists().await && repo_repo.visible(&user.username, &tree.user).await.unwrap() {
         let branches = repo_repo.list_branches().await.unwrap();
         let repo_tree = {
-            let path = (uri.path() != "/").then(|| Utf8Path::new(&uri.path()[1..]));
+            let path = (tree.path != "/").then(|| Utf8Path::new(&tree.path[1..]));
             let tree = repo_repo.get_tree_list(&query.branch, path).await.unwrap();
             let mut tree = tree.ok_or(StatusTemplate(StatusCode::NOT_FOUND))?;
 
@@ -122,7 +120,7 @@ pub async fn tree(
             repo: tree.repo,
             branch: query.branch,
             branches,
-            path: Utf8PathBuf::from(uri.path()[1..].to_owned()),
+            path: Utf8PathBuf::from(tree.path[1..].to_owned()),
             tree: repo_tree,
         }))
     } else {

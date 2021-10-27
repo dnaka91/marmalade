@@ -3,8 +3,8 @@
 use std::time::{Duration, SystemTime};
 
 use axum::{
-    extract::TypedHeader,
-    http::{StatusCode, Uri},
+    extract::{Path, TypedHeader},
+    http::StatusCode,
     response::IntoResponse,
 };
 use headers::{
@@ -54,7 +54,7 @@ pub async fn main_css(
 }
 
 pub async fn webfonts(
-    uri: Uri,
+    Path(path): Path<String>,
     if_modified_since: Option<TypedHeader<IfModifiedSince>>,
     if_none_match: Option<TypedHeader<IfNoneMatch>>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
@@ -62,7 +62,7 @@ pub async fn webfonts(
 
     let index = assets::WEBFONTS_NAME
         .iter()
-        .position(|&route| route == uri.path())
+        .position(|&route| route == path)
         .ok_or_else(|| (HeaderMap::new(), StatusCode::NOT_FOUND))?;
 
     let modified = if_modified_since.map(|v| v.is_modified(SystemTime::UNIX_EPOCH));

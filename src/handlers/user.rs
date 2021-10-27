@@ -18,7 +18,6 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct BasePath {
-    #[serde(deserialize_with = "crate::de::percent")]
     pub user: String,
 }
 

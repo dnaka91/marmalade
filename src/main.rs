@@ -7,7 +7,8 @@ use std::{env, net::SocketAddr};
 
 use anyhow::Result;
 use axum::{
-    handler::{get, post, Handler},
+    handler::Handler,
+    routing::{get, post},
     AddExtensionLayer, Router, Server,
 };
 use tokio::signal;
@@ -55,34 +56,25 @@ async fn main() -> Result<()> {
     let server = Server::try_bind(&addr)?
         .serve(
             Router::new()
-                .nest(
-                    "/:user",
-                    Router::new()
-                        .nest(
-                            "/:repo",
-                            Router::new()
-                                .nest("/tree", get(handlers::repo::tree))
-                                .route("/:service", post(handlers::git::pack))
-                                .route("/info/refs", get(handlers::git::info_refs))
-                                .route(
-                                    "/delete",
-                                    get(handlers::repo::delete).post(handlers::repo::delete_post),
-                                )
-                                .route(
-                                    "/settings",
-                                    get(handlers::repo::settings)
-                                        .post(handlers::repo::settings_post),
-                                )
-                                .route("/", get(handlers::repo::index)),
-                        )
-                        .route("/password", post(handlers::user::password_post))
-                        .route(
-                            "/settings",
-                            get(handlers::user::settings).post(handlers::user::settings_post),
-                        )
-                        .route("/", get(handlers::user::index)),
+                .route("/:user/:repo/:service", post(handlers::git::pack))
+                .route("/:user/:repo/info/refs", get(handlers::git::info_refs))
+                .route("/:user/:repo/tree/*path", get(handlers::repo::tree))
+                .route(
+                    "/:user/:repo/delete",
+                    get(handlers::repo::delete).post(handlers::repo::delete_post),
                 )
-                .nest(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
+                .route(
+                    "/:user/:repo/settings",
+                    get(handlers::repo::settings).post(handlers::repo::settings_post),
+                )
+                .route("/:user/:repo", get(handlers::repo::index))
+                .route("/:user/password", post(handlers::user::password_post))
+                .route(
+                    "/:user/settings",
+                    get(handlers::user::settings).post(handlers::user::settings_post),
+                )
+                .route("/:user", get(handlers::user::index))
+                .route(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
                 .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
                 .route("/favicon-16x16.png", get(handlers::assets::favicon_16))
                 .route("/favicon-32x32.png", get(handlers::assets::favicon_32))
@@ -101,7 +93,7 @@ async fn main() -> Result<()> {
                     get(handlers::auth::login).post(handlers::auth::login_post),
                 )
                 .route("/", get(handlers::index))
-                .or(handlers::handle_404.into_service())
+                .fallback(handlers::handle_404.into_service())
                 .layer(
                     ServiceBuilder::new()
                         .layer(TraceLayer::new_for_http())
@@ -110,7 +102,6 @@ async fn main() -> Result<()> {
                         .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),
                 )
-                .check_infallible()
                 .into_make_service(),
         )
         .with_graceful_shutdown(shutdown());

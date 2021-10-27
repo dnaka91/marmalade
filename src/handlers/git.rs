@@ -59,7 +59,6 @@ impl GitService {
 
 #[derive(Debug, Deserialize)]
 pub struct InfoRefsParams {
-    #[serde(deserialize_with = "crate::de::percent")]
     user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     repo: String,
@@ -112,7 +111,6 @@ pub async fn info_refs(
 
 #[derive(Debug, Deserialize)]
 pub struct PackParams {
-    #[serde(deserialize_with = "crate::de::percent")]
     user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     repo: String,

@@ -5,6 +5,7 @@ use axum::{
     extract::{Extension, FromRequest, RequestParts},
     http::{header::COOKIE, HeaderMap},
 };
+use rand::Rng;
 
 use crate::settings::GlobalSettings;
 
@@ -81,6 +82,12 @@ where
 
         Ok(Self { jar, key })
     }
+}
+
+pub fn generate_key() -> [u8; 64] {
+    let mut key = [0; 64];
+    rand::thread_rng().fill(&mut key);
+    key
 }
 
 fn get_cookie_jar(map: Option<&HeaderMap>) -> cookie::CookieJar {

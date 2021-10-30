@@ -8,6 +8,7 @@ use once_cell::sync::Lazy;
 pub static DIRS: Lazy<Utf8ProjectDirs> = Lazy::new(|| Utf8ProjectDirs::new().unwrap());
 
 pub struct Utf8ProjectDirs {
+    data_dir: Utf8PathBuf,
     users_dir: Utf8PathBuf,
 }
 
@@ -25,7 +26,22 @@ impl Utf8ProjectDirs {
         };
         let users_dir = data_dir.join("users");
 
-        Ok(Self { users_dir })
+        Ok(Self {
+            data_dir,
+            users_dir,
+        })
+    }
+
+    // <data>/state.json
+    #[inline]
+    pub fn settings_file(&self) -> Utf8PathBuf {
+        self.data_dir.join("settings.json")
+    }
+
+    // <data>/~state.json
+    #[inline]
+    pub fn settings_temp_file(&self) -> Utf8PathBuf {
+        self.data_dir.join("~settings.json")
     }
 
     // <data>/users

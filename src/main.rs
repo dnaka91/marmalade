@@ -30,6 +30,7 @@ mod models;
 mod redirect;
 mod repositories;
 mod response;
+mod ser;
 mod session;
 mod settings;
 mod templates;
@@ -52,7 +53,7 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let settings = crate::settings::load()?;
+    let settings = crate::settings::load().await?;
     let addr = SocketAddr::from((ADDRESS, 8080));
 
     let server = Server::try_bind(&addr)?

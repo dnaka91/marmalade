@@ -17,6 +17,8 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
+use crate::middleware::OnionLocationLayer;
+
 mod assets;
 mod cookies;
 mod de;
@@ -98,6 +100,9 @@ async fn main() -> Result<()> {
                     ServiceBuilder::new()
                         .layer(TraceLayer::new_for_http())
                         .layer(CompressionLayer::new())
+                        .layer(OnionLocationLayer::new(
+                            settings.tor.as_ref().map(|t| t.onion.as_str()),
+                        ))
                         .layer(AddExtensionLayer::new(settings))
                         .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),

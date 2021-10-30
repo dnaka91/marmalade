@@ -9,6 +9,12 @@ pub type GlobalSettings = Arc<Settings>;
 pub struct Settings {
     #[serde(deserialize_with = "crate::de::hex")]
     pub key: [u8; 64],
+    pub tor: Option<Tor>,
+}
+
+#[derive(Deserialize)]
+pub struct Tor {
+    pub onion: String,
 }
 
 pub fn load() -> Result<GlobalSettings> {

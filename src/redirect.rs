@@ -19,6 +19,10 @@ pub fn to_repo_create() -> Redirect {
     Redirect::to("/repo/create".parse().unwrap())
 }
 
+pub fn to_admin_settings() -> Redirect {
+    Redirect::to("/settings".parse().unwrap())
+}
+
 pub fn to_repo_index(user: &str, repo: &str) -> Redirect {
     let user = Cow::from(percent_encoding::utf8_percent_encode(
         user,
@@ -86,6 +90,7 @@ mod tests {
         assert_eq!("/login", get_location(to_login()));
         assert_eq!("/register", get_location(to_register()));
         assert_eq!("/repo/create", get_location(to_repo_create()));
+        assert_eq!("/settings", get_location(to_admin_settings()));
     }
 
     #[test]

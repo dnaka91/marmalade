@@ -3,7 +3,6 @@
 use std::{
     convert::Infallible,
     mem,
-    sync::Arc,
     task::{Context, Poll},
 };
 
@@ -20,6 +19,8 @@ use axum::{
 use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
 use tracing::error;
+
+use crate::repositories::SettingsRepository;
 
 pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<BoxBody>, Infallible> {
     let headers = res.headers_mut();
@@ -48,7 +49,6 @@ pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<Box
 #[derive(Clone)]
 pub struct OnionLocation<S> {
     inner: S,
-    onion: Arc<Option<String>>,
 }
 
 impl<S, ReqBody, ResBody> Service<Request<ReqBody>> for OnionLocation<S>
@@ -67,15 +67,13 @@ where
     }
 
     fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
-        let onion = Arc::clone(&self.onion);
-
         // best practice is to clone the inner service like this
         // see https://github.com/tower-rs/tower/issues/547 for details
         let clone = self.inner.clone();
         let mut inner = mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
-            if let Some(onion) = onion.as_deref() {
+            if let Some(onion) = SettingsRepository::new().get_tor_onion().await {
                 let path = req.uri().path().to_owned();
                 let mut resp = inner.call(req).await?;
 
@@ -97,14 +95,12 @@ where
 }
 
 pub struct OnionLocationLayer {
-    onion: Arc<Option<String>>,
+    _priv: (),
 }
 
 impl OnionLocationLayer {
-    pub fn new(onion: Option<&str>) -> Self {
-        Self {
-            onion: Arc::new(onion.map(ToOwned::to_owned)),
-        }
+    pub fn new() -> Self {
+        Self { _priv: () }
     }
 }
 
@@ -112,9 +108,6 @@ impl<S> Layer<S> for OnionLocationLayer {
     type Service = OnionLocation<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        OnionLocation {
-            inner,
-            onion: Arc::clone(&self.onion),
-        }
+        OnionLocation { inner }
     }
 }

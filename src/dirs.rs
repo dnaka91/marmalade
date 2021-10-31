@@ -32,6 +32,12 @@ impl Utf8ProjectDirs {
         })
     }
 
+    // <data>
+    #[inline]
+    pub fn data_dir(&self) -> &Utf8Path {
+        &self.data_dir
+    }
+
     // <data>/state.json
     #[inline]
     pub fn settings_file(&self) -> Utf8PathBuf {

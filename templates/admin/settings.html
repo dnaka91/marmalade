@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "../nav.html" %}
+<section class="section">
+  <div class="container">
+
+    {% match message %}
+    {% when Some with (m) %}
+
+    {% let color %}
+    {% if m == ServerSettingsMessage::Success %}
+    {% let color = "is-success" %}
+    {% else %}
+    {% let color = "is-danger is-light" %}
+    {% endif %}
+    <div class="notification {{ color }}">
+      {% match m %}
+      {% when ServerSettingsMessage::Success %}
+      Changes successfully saved!
+      {% when ServerSettingsMessage::FailedReset %}
+      Failed to reset the cookie key.
+      {% endmatch %}
+    </div>
+    {%- when None -%}
+    {% endmatch %}
+
+    <div class="box">
+      <h4 class="title is-4">Tor</h4>
+
+      <form method="POST" action="/settings/tor">
+
+        <div class="field">
+          <label class="label" for="name">Onion address</label>
+          <div class="control">
+            <input class="input" type="url" id="onion" name="onion" value="{{ onion }}">
+          </div>
+        </div>
+
+        <button class="button is-primary">
+          <span class="icon">
+            <i class="fas fa-save"></i>
+          </span>
+          <span>Save</span>
+        </button>
+
+      </form>
+    </div>
+
+    <div class="box">
+      <h4 class="title is-4">
+        <span class="icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </span>
+        <span>Danger zone</span>
+      </h4>
+
+      <form method="POST" action="/settings/dz">
+
+        <input type="hidden" name="kind" value="ResetKey">
+
+        <button class="button is-danger">
+          <span class="icon">
+            <i class="fas fa-undo"></i>
+          </span>
+          <span>Reset cookie key</span>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endblock content %}

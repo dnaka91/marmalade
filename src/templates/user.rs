@@ -8,7 +8,7 @@ use crate::models::UserAccount;
 #[derive(Template)]
 #[template(path = "user/index.html")]
 pub struct Index {
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub user: String,
     pub repos: Vec<(String, String)>,
 }
@@ -16,8 +16,8 @@ pub struct Index {
 impl Index {
     fn auth_same_user(&self) -> bool {
         self.auth_user
-            .as_deref()
-            .map(|u| u == self.user)
+            .as_ref()
+            .map(|u| u.username == self.user)
             .unwrap_or_default()
     }
 }
@@ -25,7 +25,7 @@ impl Index {
 #[derive(Template)]
 #[template(path = "user/list.html")]
 pub struct List {
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub users: Vec<String>,
 }
 
@@ -33,7 +33,7 @@ pub struct List {
 #[template(path = "user/settings.html")]
 pub struct Settings {
     pub message: Option<UserSettingsMessage>,
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub user: String,
     pub settings: UserAccount,
 }

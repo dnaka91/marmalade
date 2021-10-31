@@ -1,6 +1,27 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+pub struct Settings {
+    #[serde(with = "crate::ser::hex")]
+    pub key: [u8; 64],
+    pub tor: Option<Tor>,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            key: [0; 64],
+            tor: None,
+        }
+    }
+}
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct Tor {
+    pub onion: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct UserAccount {
     pub username: String,
     pub password: String,

@@ -2,12 +2,12 @@ use std::{borrow::Cow, convert::Infallible, fmt::Display};
 
 use axum::{
     async_trait,
-    extract::{Extension, FromRequest, RequestParts},
+    extract::{FromRequest, RequestParts},
     http::{header::COOKIE, HeaderMap},
 };
 use rand::Rng;
 
-use crate::settings::GlobalSettings;
+use crate::repositories::SettingsRepository;
 
 #[derive(Debug)]
 pub struct Cookie(cookie::Cookie<'static>);
@@ -73,12 +73,10 @@ where
     type Rejection = Infallible;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let settings = <Extension<GlobalSettings>>::from_request(req)
-            .await
-            .expect("global settings extension missing");
+        let settings = SettingsRepository::new();
 
         let jar = get_cookie_jar(req.headers());
-        let key = cookie::Key::from(&settings.key);
+        let key = cookie::Key::from(&settings.get_key().await);
 
         Ok(Self { jar, key })
     }

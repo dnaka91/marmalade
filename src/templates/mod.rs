@@ -4,13 +4,16 @@ use anyhow::bail;
 use askama::Template;
 use axum::http::StatusCode;
 
+use crate::models::UserAccount;
+
+pub mod admin;
 pub mod repo;
 pub mod user;
 
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct Index {
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
 }
 
 #[derive(Template)]

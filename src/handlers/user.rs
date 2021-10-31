@@ -22,7 +22,7 @@ pub struct BasePath {
 }
 
 pub async fn index(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, "got user index request");
@@ -33,7 +33,7 @@ pub async fn index(
         let repos = user_repo.list_repo_names(&user.username).await.unwrap();
 
         Ok(HtmlTemplate(templates::user::Index {
-            auth_user: Some(user.username),
+            auth_user: Some(user),
             user: path.user,
             repos,
         }))
@@ -42,7 +42,7 @@ pub async fn index(
     }
 }
 
-pub async fn list(user: User) -> impl IntoResponse {
+pub async fn list(User(user): User) -> impl IntoResponse {
     info!("got user list request");
 
     let users = UserRepository::for_user(&user.username)
@@ -51,13 +51,13 @@ pub async fn list(user: User) -> impl IntoResponse {
         .unwrap();
 
     HtmlTemplate(templates::user::List {
-        auth_user: Some(user.username),
+        auth_user: Some(user),
         users,
     })
 }
 
 pub async fn settings(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
@@ -81,7 +81,7 @@ pub async fn settings(
 
     Ok(SetCookies::new(
         HtmlTemplate(templates::user::Settings {
-            auth_user: Some(user.username),
+            auth_user: Some(user),
             message,
             user: path.user,
             settings,
@@ -98,7 +98,7 @@ pub struct Settings {
 }
 
 pub async fn settings_post(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
     Form(settings): Form<Settings>,
     mut cookies: Cookies,
@@ -135,7 +135,7 @@ pub struct NewPassword {
 }
 
 pub async fn password_post(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
     Form(pw): Form<NewPassword>,
     mut cookies: Cookies,

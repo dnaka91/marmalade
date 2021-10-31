@@ -97,10 +97,7 @@ impl<'a> UserRepository<'a> {
 
             let user_repo = UserRepository::for_user(file_name);
 
-            if auth_user != file_name
-                && user_repo.exists().await
-                && user_repo.visible(auth_user, file_name).await?
-            {
+            if user_repo.exists().await && user_repo.visible(auth_user, file_name).await? {
                 names.push(file_name.to_owned());
             }
         }
@@ -167,10 +164,11 @@ impl<'a> UserRepository<'a> {
         info.password = hash_password(password)?;
 
         self.save_info(&info).await?;
-        self.edit_tokens(|tokens| {
-            tokens.clear();
-        })
-        .await
+        self.clear_tokens().await
+    }
+
+    pub async fn clear_tokens(&self) -> Result<()> {
+        self.edit_tokens(HashSet::clear).await
     }
 }
 

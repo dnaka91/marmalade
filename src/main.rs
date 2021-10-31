@@ -9,7 +9,7 @@ use anyhow::Result;
 use axum::{
     handler::Handler,
     routing::{get, post},
-    AddExtensionLayer, Router, Server,
+    Router, Server,
 };
 use tokio::signal;
 use tower::{util::AndThenLayer, ServiceBuilder};
@@ -17,7 +17,7 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
-use crate::middleware::OnionLocationLayer;
+use crate::{middleware::OnionLocationLayer, repositories::SettingsRepository};
 
 mod assets;
 mod cookies;
@@ -32,7 +32,6 @@ mod repositories;
 mod response;
 mod ser;
 mod session;
-mod settings;
 mod templates;
 mod validate;
 
@@ -53,7 +52,8 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let settings = crate::settings::load().await?;
+    SettingsRepository::init().await?;
+
     let addr = SocketAddr::from((ADDRESS, 8080));
 
     let server = Server::try_bind(&addr)?
@@ -81,6 +81,9 @@ async fn main() -> Result<()> {
                 .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
                 .route("/favicon-16x16.png", get(handlers::assets::favicon_16))
                 .route("/favicon-32x32.png", get(handlers::assets::favicon_32))
+                .route("/settings/dz", post(handlers::admin::settings_dz_post))
+                .route("/settings/tor", post(handlers::admin::settings_tor_post))
+                .route("/settings", get(handlers::admin::settings))
                 .route("/users", get(handlers::user::list))
                 .route(
                     "/repo/create",
@@ -101,10 +104,7 @@ async fn main() -> Result<()> {
                     ServiceBuilder::new()
                         .layer(TraceLayer::new_for_http())
                         .layer(CompressionLayer::new())
-                        .layer(OnionLocationLayer::new(
-                            settings.tor.as_ref().map(|t| t.onion.as_str()),
-                        ))
-                        .layer(AddExtensionLayer::new(settings))
+                        .layer(OnionLocationLayer::new())
                         .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),
                 )

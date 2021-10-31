@@ -33,7 +33,7 @@ pub struct BasePath {
 }
 
 pub async fn index(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo index request");
@@ -54,7 +54,7 @@ pub async fn index(
         );
 
         Ok(HtmlTemplate(templates::repo::Index {
-            auth_user: Some(user.username),
+            auth_user: Some(user),
             user: path.user,
             repo: path.repo,
             branch,
@@ -80,7 +80,7 @@ pub struct TreeQuery {
 }
 
 pub async fn tree(
-    user: User,
+    User(user): User,
     Path(tree): Path<Tree>,
     Query(query): Query<TreeQuery>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
@@ -115,7 +115,7 @@ pub async fn tree(
         };
 
         Ok(HtmlTemplate(templates::repo::Tree {
-            auth_user: Some(user.username),
+            auth_user: Some(user),
             user: tree.user,
             repo: tree.repo,
             branch: query.branch,
@@ -128,7 +128,7 @@ pub async fn tree(
     }
 }
 
-pub async fn create(user: User, mut cookies: Cookies) -> impl IntoResponse {
+pub async fn create(User(user): User, mut cookies: Cookies) -> impl IntoResponse {
     info!(?user.username, "got repo create request");
 
     let error = cookies
@@ -151,7 +151,7 @@ pub struct Create {
 }
 
 pub async fn create_post(
-    user: User,
+    User(user): User,
     Form(create): Form<Create>,
     mut cookies: Cookies,
 ) -> impl IntoResponse {
@@ -187,7 +187,7 @@ pub async fn create_post(
 }
 
 pub async fn delete(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo delete request");
@@ -202,7 +202,7 @@ pub async fn delete(
 }
 
 pub async fn delete_post(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!(?path.user, ?path.repo, "got repo delete request");
@@ -219,7 +219,7 @@ pub async fn delete_post(
 }
 
 pub async fn settings(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
@@ -245,7 +245,7 @@ pub async fn settings(
 
     Ok(SetCookies::new(
         HtmlTemplate(templates::repo::Settings {
-            auth_user: Some(user.username),
+            auth_user: Some(user),
             message,
             user: path.user,
             repo: path.repo,
@@ -266,7 +266,7 @@ pub struct Settings {
 }
 
 pub async fn settings_post(
-    user: User,
+    User(user): User,
     Path(path): Path<BasePath>,
     Form(settings): Form<Settings>,
     mut cookies: Cookies,

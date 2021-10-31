@@ -7,13 +7,18 @@
       Home
     </a>
     {% match auth_user %}
-    {% when Some with (name) %}
-    <a class="navbar-item" href="/{{ name|urlencode }}">
+    {% when Some with (user) %}
+    <a class="navbar-item" href="/{{ user.username|urlencode }}">
       Profile
     </a>
     <a class="navbar-item" href="/users">
       Users
     </a>
+    {% if user.admin %}
+    <a class="navbar-item" href="/settings">
+      Settings
+    </a>
+    {% endif %}
     {%- when None -%}
     {% endmatch %}
   </div>

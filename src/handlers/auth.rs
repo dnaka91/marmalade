@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     cookies::{Cookie, Cookies},
-    extract::User,
+    extract::BasicUser,
     redirect,
     repositories::{CreateUser, UserRepository},
     response::{HtmlTemplate, SetCookies},
@@ -63,7 +63,7 @@ pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl 
     SetCookies::new(redirect::to_root(), cookies)
 }
 
-pub async fn logout(user: User, mut cookies: Cookies) -> impl IntoResponse {
+pub async fn logout(user: BasicUser, mut cookies: Cookies) -> impl IntoResponse {
     info!(?user.username, "got auth logout request");
 
     let user_repo = UserRepository::for_user(&user.username);

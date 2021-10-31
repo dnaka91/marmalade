@@ -4,12 +4,12 @@ use anyhow::bail;
 use askama::Template;
 use camino::Utf8PathBuf;
 
-use crate::models::{FileKind, RepoFile, RepoTree, TreeKind, UserRepo};
+use crate::models::{FileKind, RepoFile, RepoTree, TreeKind, UserAccount, UserRepo};
 
 #[derive(Template)]
 #[template(path = "repo/index.html")]
 pub struct Index {
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub user: String,
     pub repo: String,
     pub branch: String,
@@ -20,7 +20,7 @@ pub struct Index {
 #[derive(Template)]
 #[template(path = "repo/tree.html")]
 pub struct Tree {
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub user: String,
     pub repo: String,
     pub branch: String,
@@ -99,7 +99,7 @@ pub struct Delete {
 #[template(path = "repo/settings.html")]
 pub struct Settings {
     pub message: Option<RepoSettingsMessage>,
-    pub auth_user: Option<String>,
+    pub auth_user: Option<UserAccount>,
     pub user: String,
     pub repo: String,
     pub branch: String,

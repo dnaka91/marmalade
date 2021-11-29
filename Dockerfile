@@ -14,7 +14,7 @@ COPY build.rs Cargo.lock Cargo.toml ./
 RUN cargo build --release --target x86_64-unknown-linux-musl && \
     strip --strip-all target/x86_64-unknown-linux-musl/release/marmalade
 
-FROM alpine:3.14
+FROM alpine:3.15.0
 
 RUN apk add --no-cache git=2.32.0-r0 && \
     addgroup -g 1000 marmalade && \

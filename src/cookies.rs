@@ -98,7 +98,7 @@ fn get_cookie_jar(map: Option<&HeaderMap>) -> cookie::CookieJar {
                 Err(_) => continue,
             };
 
-            for part in cookie.split(';').map(|c| c.trim()) {
+            for part in cookie.split(';').map(str::trim) {
                 if let Ok(cookie) = part.parse() {
                     jar.add_original(cookie);
                 }

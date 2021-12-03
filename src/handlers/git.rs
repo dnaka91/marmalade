@@ -5,8 +5,8 @@ use std::{
 
 use anyhow::Result;
 use axum::{
-    body::{Body, Full},
-    extract::{Path, Query},
+    body::{Full, StreamBody},
+    extract::{BodyStream, Path, Query},
     http::{Response, StatusCode},
     response::IntoResponse,
 };
@@ -120,7 +120,7 @@ pub struct PackParams {
 pub async fn pack(
     auth: BasicAuth,
     Path(params): Path<PackParams>,
-    body: Body,
+    body: BodyStream,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(
         auth_user = ?auth.username,
@@ -169,7 +169,7 @@ pub async fn pack(
         }
     });
 
-    let body = Body::wrap_stream(ReaderStream::new(stdout));
+    let body = StreamBody::new(ReaderStream::new(stdout));
 
     Ok(Response::builder()
         .header("Content-Type", params.service.content_type(false))

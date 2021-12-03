@@ -1,8 +1,8 @@
-use std::convert::{Infallible, TryInto};
+use std::convert::TryInto;
 
 use askama::Template;
 use axum::{
-    body::{Bytes, Full},
+    body::{self, BoxBody, Empty},
     http::{header::SET_COOKIE, Response, StatusCode},
     response::{self, IntoResponse},
 };
@@ -16,17 +16,14 @@ impl<T> IntoResponse for HtmlTemplate<T>
 where
     T: Template,
 {
-    type Body = Full<Bytes>;
-    type BodyError = Infallible;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response<BoxBody> {
         match self.0.render() {
             Ok(html) => response::Html(html).into_response(),
-            Err(e) => {
-                error!("failed rendering template: {:?}", e);
+            Err(err) => {
+                error!(?err, "failed rendering template");
                 Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Full::default())
+                    .body(body::boxed(Empty::new()))
                     .unwrap()
             }
         }
@@ -36,10 +33,7 @@ where
 pub struct StatusTemplate(pub StatusCode);
 
 impl IntoResponse for StatusTemplate {
-    type Body = Full<Bytes>;
-    type BodyError = Infallible;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response<BoxBody> {
         let mut res = HtmlTemplate(templates::Error {
             code: self.0,
             message: None,
@@ -69,10 +63,7 @@ impl<T> IntoResponse for SetCookies<T>
 where
     T: IntoResponse,
 {
-    type Body = T::Body;
-    type BodyError = T::BodyError;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response<BoxBody> {
         let mut res = self.inner.into_response();
         let headers = res.headers_mut();
 

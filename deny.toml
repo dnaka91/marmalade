@@ -4,3 +4,10 @@ allow-osi-fsf-free = "both"
 exceptions = [
     { allow = ["AGPL-3.0"], name = "marmalade", version = "*" },
 ]
+
+[bans]
+skip = [
+    { name = "block-buffer", version = "=0.9.0" },
+    { name = "digest", version = "=0.9.0" },
+    { name = "itoa", version = "=0.4.8" },
+]

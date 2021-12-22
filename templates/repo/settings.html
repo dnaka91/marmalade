@@ -28,16 +28,14 @@
       </ul>
     </div>
 
-    {% match message %}
-    {% when Some with (m) %}
+    {% if let Some(m) = message %}
     <div class="notification is-success">
       {% match m %}
       {% when RepoSettingsMessage::Success %}
       Changes successfully saved!
       {% endmatch %}
     </div>
-    {%- when None -%}
-    {% endmatch %}
+    {% endif %}
 
     <div class="box">
 

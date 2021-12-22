@@ -8,20 +8,16 @@
       <h1 class="title">
         {{ self::status_emoji(code) }} {{ code.as_str() -}}
 
-        {%- match code.canonical_reason() -%}
-        {%- when Some with (reason) -%}
+        {%- if let Some(reason) = code.canonical_reason() -%}
         {{ " " }} - {{ reason }}
-        {%- when None -%}
-        {%- endmatch %}
+        {%- endif %}
       </h1>
 
-      {% match message %}
-      {% when Some with (msg) %}
+      {% if let Some(msg) = message %}
       <div class="notification is-danger is-light">
         {{ msg }}
       </div>
-      {%- when None -%}
-      {% endmatch %}
+      {% endif %}
 
     </div>
   </div>

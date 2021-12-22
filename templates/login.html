@@ -10,8 +10,7 @@
 
             <h1 class="title">Login</h1>
 
-            {% match error %}
-            {% when Some with (e) %}
+            {% if let Some(e) = error %}
             <div class="notification is-danger is-light">
               {% match e %}
               {% when LoginError::Empty %}
@@ -20,8 +19,7 @@
               Wrong login credentials.
               {% endmatch %}
             </div>
-            {%- when None -%}
-            {% endmatch %}
+            {% endif %}
 
             <form method="POST" action="/login">
               <div class="field">

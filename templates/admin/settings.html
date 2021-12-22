@@ -5,8 +5,7 @@
 <section class="section">
   <div class="container">
 
-    {% match message %}
-    {% when Some with (m) %}
+    {% if let Some(m) = message %}
 
     {% let color %}
     {% if m == ServerSettingsMessage::Success %}
@@ -22,8 +21,7 @@
       Failed to reset the cookie key.
       {% endmatch %}
     </div>
-    {%- when None -%}
-    {% endmatch %}
+    {% endif %}
 
     <div class="box">
       <h4 class="title is-4">Tor</h4>

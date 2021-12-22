@@ -6,8 +6,7 @@
     <a class="navbar-item" href="/">
       Home
     </a>
-    {% match auth_user %}
-    {% when Some with (user) %}
+    {% if let Some(user) = auth_user %}
     <a class="navbar-item" href="/{{ user.username|urlencode }}">
       Profile
     </a>
@@ -19,28 +18,26 @@
       Settings
     </a>
     {% endif %}
-    {%- when None -%}
-    {% endmatch %}
+    {% endif %}
   </div>
 
   <div class="navbar-end">
     <div class="navbar-item">
       <div class="buttons">
-        {% match auth_user %}
-        {% when Some with (_) %}
+        {% if auth_user.is_some() %}
         <form method="POST" action="/logout">
           <button class="button is-dark is-outlined">
             Log out
           </button>
         </form>
-        {% when None %}
+        {% else %}
         <a class="button is-primary" href="/register">
           <strong>Register</strong>
         </a>
         <a class="button is-dark is-outlined" href="/login">
           Log in
         </a>
-        {% endmatch %}
+        {% endif %}
       </div>
     </div>
   </div>

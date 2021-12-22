@@ -10,8 +10,7 @@
 
             <h1 class="title">Create repository</h1>
 
-            {% match error %}
-            {% when Some with (e) %}
+            {% if let Some(e) = error %}
             <div class="notification is-danger is-light">
               {% match e %}
               {% when RepoCreateError::InvalidName %}
@@ -21,8 +20,7 @@
               Repository with the same name already exists.
               {% endmatch %}
             </div>
-            {%- when None -%}
-            {% endmatch %}
+            {% endif %}
 
             <form method="POST" action="/repo/create">
               <div class="field">

@@ -22,8 +22,7 @@
       </ul>
     </div>
 
-    {% match message %}
-    {% when Some with (m) %}
+    {% if let Some(m) = message %}
 
     {% let color %}
     {% if m == UserSettingsMessage::Success %}
@@ -39,8 +38,7 @@
       Password must be at least 6 characters long.
       {% endmatch %}
     </div>
-    {%- when None -%}
-    {% endmatch %}
+    {% endif %}
 
     <div class="box">
       <h4 class="title is-4">Update information</h4>

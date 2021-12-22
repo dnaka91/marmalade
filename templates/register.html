@@ -10,8 +10,7 @@
 
             <h1 class="title">Register</h1>
 
-            {% match error %}
-            {% when Some with (e) %}
+            {% if let Some(e) = error %}
             <div class="notification is-danger is-light">
               {% match e %}
               {% when RegisterError::InvalidUsername %}
@@ -23,8 +22,7 @@
               Username is not available.
               {% endmatch %}
             </div>
-            {%- when None -%}
-            {% endmatch %}
+            {% endif %}
 
             <form method="POST" action="/register">
               <div class="field">

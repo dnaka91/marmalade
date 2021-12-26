@@ -3,8 +3,8 @@ use camino::{Utf8Path, Utf8PathBuf};
 use once_cell::sync::Lazy;
 use unidirs::{UnifiedDirs, Directories};
 
-// Unwrap: We can't run the server without known where to place files, so panic here as there is no
-// good recovery case other than throwing an error and shutting down.
+// Unwrap: We can't run the server without knowning where to place files, so panic here as there is
+// no good recovery case other than throwing an error and shutting down.
 pub static DIRS: Lazy<Dirs> = Lazy::new(|| Dirs::new().unwrap());
 
 pub struct Dirs {

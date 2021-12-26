@@ -1,29 +1,24 @@
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use directories_next::ProjectDirs;
 use once_cell::sync::Lazy;
+use unidirs::{UnifiedDirs, Directories};
 
 // Unwrap: We can't run the server without known where to place files, so panic here as there is no
 // good recovery case other than throwing an error and shutting down.
-pub static DIRS: Lazy<Utf8ProjectDirs> = Lazy::new(|| Utf8ProjectDirs::new().unwrap());
+pub static DIRS: Lazy<Dirs> = Lazy::new(|| Dirs::new().unwrap());
 
-pub struct Utf8ProjectDirs {
+pub struct Dirs {
     data_dir: Utf8PathBuf,
     users_dir: Utf8PathBuf,
 }
 
-impl Utf8ProjectDirs {
+impl Dirs {
     fn new() -> Result<Self> {
-        let data_dir = if whoami::username() == "marmalade" {
-            Utf8PathBuf::from(concat!("/var/lib/", env!("CARGO_PKG_NAME")))
-        } else {
-            let dirs = ProjectDirs::from("rocks", "dnaka91", env!("CARGO_PKG_NAME"))
-                .context("failed finding project dirs")?;
-
-            Utf8Path::from_path(dirs.data_dir())
-                .context("project data dir is not valid UTF-8")?
-                .to_owned()
-        };
+        let data_dir = UnifiedDirs::simple("rocks", "dnaka91", env!("CARGO_PKG_NAME"))
+            .default()
+            .context("failed finding project directories")?
+            .data_dir()
+            .to_owned();
         let users_dir = data_dir.join("users");
 
         Ok(Self {
@@ -38,13 +33,13 @@ impl Utf8ProjectDirs {
         &self.data_dir
     }
 
-    // <data>/state.json
+    // <data>/settings.json
     #[inline]
     pub fn settings_file(&self) -> Utf8PathBuf {
         self.data_dir.join("settings.json")
     }
 
-    // <data>/~state.json
+    // <data>/~settings.json
     #[inline]
     pub fn settings_temp_file(&self) -> Utf8PathBuf {
         self.data_dir.join("~settings.json")

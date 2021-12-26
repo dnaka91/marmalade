@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use once_cell::sync::Lazy;
-use unidirs::{UnifiedDirs, Directories};
+use unidirs::{Directories, UnifiedDirs};
 
 // Unwrap: We can't run the server without knowning where to place files, so panic here as there is
 // no good recovery case other than throwing an error and shutting down.

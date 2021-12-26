@@ -3,7 +3,10 @@
 #![allow(clippy::module_name_repetitions)]
 #![recursion_limit = "256"]
 
-use std::{env, net::SocketAddr};
+use std::{
+    env,
+    net::{Ipv4Addr, SocketAddr},
+};
 
 use anyhow::Result;
 use axum::{
@@ -35,10 +38,11 @@ mod session;
 mod templates;
 mod validate;
 
-#[cfg(debug_assertions)]
-const ADDRESS: [u8; 4] = [127, 0, 0, 1];
-#[cfg(not(debug_assertions))]
-const ADDRESS: [u8; 4] = [0, 0, 0, 0];
+const ADDRESS: Ipv4Addr = if cfg!(debug_assertions) {
+    Ipv4Addr::LOCALHOST
+} else {
+    Ipv4Addr::UNSPECIFIED
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {

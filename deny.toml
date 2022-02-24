@@ -7,7 +7,5 @@ exceptions = [
 
 [bans]
 skip = [
-    { name = "block-buffer", version = "=0.9.0" },
-    { name = "digest", version = "=0.9.0" },
-    { name = "itoa", version = "=0.4.8" },
+    { name = "tokio-util", version = "=0.6.9" },
 ]

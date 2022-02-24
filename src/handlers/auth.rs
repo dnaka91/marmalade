@@ -8,7 +8,7 @@ use crate::{
     extract::BasicUser,
     redirect,
     repositories::{CreateUser, UserRepository},
-    response::{HtmlTemplate, SetCookies},
+    response::SetCookies,
     session::{COOKIE_ERROR, COOKIE_SESSION, COOKIE_USERNAME},
     templates, validate,
 };
@@ -24,7 +24,7 @@ pub async fn login(mut cookies: Cookies) -> impl IntoResponse {
         cookies.remove(COOKIE_ERROR);
     }
 
-    SetCookies::new(HtmlTemplate(templates::Login { error }), cookies)
+    SetCookies::new(templates::Login { error }, cookies)
 }
 
 #[derive(Deserialize)]
@@ -86,7 +86,7 @@ pub async fn register(mut cookies: Cookies) -> impl IntoResponse {
         cookies.remove(COOKIE_ERROR);
     }
 
-    SetCookies::new(HtmlTemplate(templates::Register { error }), cookies)
+    SetCookies::new(templates::Register { error }, cookies)
 }
 
 #[derive(Deserialize)]

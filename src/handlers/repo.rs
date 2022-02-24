@@ -20,7 +20,7 @@ use crate::{
     models::TreeKind,
     redirect,
     repositories::{RepoRepository, UserRepository},
-    response::{HtmlTemplate, SetCookies, StatusTemplate},
+    response::{SetCookies, StatusTemplate},
     session::{COOKIE_ERROR, COOKIE_MESSAGE},
     templates, validate,
 };
@@ -53,14 +53,14 @@ pub async fn index(
             |readme| render_markdown(&readme),
         );
 
-        Ok(HtmlTemplate(templates::repo::Index {
+        Ok(templates::repo::Index {
             auth_user: Some(user),
             user: path.user,
             repo: path.repo,
             branch,
             files,
             readme,
-        }))
+        })
     } else {
         Err(StatusTemplate(StatusCode::NOT_FOUND))
     }
@@ -114,7 +114,7 @@ pub async fn tree(
             tree
         };
 
-        Ok(HtmlTemplate(templates::repo::Tree {
+        Ok(templates::repo::Tree {
             auth_user: Some(user),
             user: tree.user,
             repo: tree.repo,
@@ -122,7 +122,7 @@ pub async fn tree(
             branches,
             path: Utf8PathBuf::from(tree.path[1..].to_owned()),
             tree: repo_tree,
-        }))
+        })
     } else {
         Err(StatusTemplate(StatusCode::NOT_FOUND))
     }
@@ -139,7 +139,7 @@ pub async fn create(User(user): User, mut cookies: Cookies) -> impl IntoResponse
         cookies.remove(COOKIE_ERROR);
     }
 
-    SetCookies::new(HtmlTemplate(templates::repo::Create { error }), cookies)
+    SetCookies::new(templates::repo::Create { error }, cookies)
 }
 
 #[derive(Deserialize)]
@@ -198,7 +198,7 @@ pub async fn delete(
         return Err(StatusTemplate(StatusCode::NOT_FOUND));
     }
 
-    Ok(HtmlTemplate(templates::repo::Delete { repo: path.repo }))
+    Ok(templates::repo::Delete { repo: path.repo })
 }
 
 pub async fn delete_post(
@@ -244,7 +244,7 @@ pub async fn settings(
     let settings = repo_repo.load_info().await.unwrap();
 
     Ok(SetCookies::new(
-        HtmlTemplate(templates::repo::Settings {
+        templates::repo::Settings {
             auth_user: Some(user),
             message,
             user: path.user,
@@ -252,7 +252,7 @@ pub async fn settings(
             branch,
             branches,
             settings,
-        }),
+        },
         cookies,
     ))
 }

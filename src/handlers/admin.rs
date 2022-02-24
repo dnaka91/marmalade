@@ -7,7 +7,7 @@ use crate::{
     extract::User,
     redirect,
     repositories::{SettingsRepository, UserRepository},
-    response::{HtmlTemplate, SetCookies, StatusTemplate},
+    response::{SetCookies, StatusTemplate},
     session::COOKIE_MESSAGE,
     templates,
 };
@@ -34,11 +34,11 @@ pub async fn settings(
     }
 
     Ok(SetCookies::new(
-        HtmlTemplate(templates::admin::Settings {
+        templates::admin::Settings {
             auth_user: Some(user),
             message,
             onion: settings_repo.get_tor_onion().await.unwrap_or_default(),
-        }),
+        },
         cookies,
     ))
 }

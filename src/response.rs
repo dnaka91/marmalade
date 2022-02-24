@@ -1,43 +1,21 @@
 use std::convert::TryInto;
 
-use askama::Template;
 use axum::{
-    body::{self, BoxBody, Empty},
+    body::BoxBody,
     http::{header::SET_COOKIE, Response, StatusCode},
-    response::{self, IntoResponse},
+    response::IntoResponse,
 };
-use tracing::error;
 
 use crate::{cookies::Cookies, templates};
-
-pub struct HtmlTemplate<T>(pub T);
-
-impl<T> IntoResponse for HtmlTemplate<T>
-where
-    T: Template,
-{
-    fn into_response(self) -> Response<BoxBody> {
-        match self.0.render() {
-            Ok(html) => response::Html(html).into_response(),
-            Err(err) => {
-                error!(?err, "failed rendering template");
-                Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(body::boxed(Empty::new()))
-                    .unwrap()
-            }
-        }
-    }
-}
 
 pub struct StatusTemplate(pub StatusCode);
 
 impl IntoResponse for StatusTemplate {
     fn into_response(self) -> Response<BoxBody> {
-        let mut res = HtmlTemplate(templates::Error {
+        let mut res = templates::Error {
             code: self.0,
             message: None,
-        })
+        }
         .into_response();
 
         if res.status() != StatusCode::INTERNAL_SERVER_ERROR {

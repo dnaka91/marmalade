@@ -11,7 +11,7 @@ use crate::{
     extract::User,
     redirect,
     repositories::UserRepository,
-    response::{HtmlTemplate, SetCookies, StatusTemplate},
+    response::{SetCookies, StatusTemplate},
     session::COOKIE_MESSAGE,
     templates, validate,
 };
@@ -32,11 +32,11 @@ pub async fn index(
     if user_repo.exists().await && user_repo.visible(&user.username, &path.user).await.unwrap() {
         let repos = user_repo.list_repo_names(&user.username).await.unwrap();
 
-        Ok(HtmlTemplate(templates::user::Index {
+        Ok(templates::user::Index {
             auth_user: Some(user),
             user: path.user,
             repos,
-        }))
+        })
     } else {
         Err(StatusTemplate(StatusCode::NOT_FOUND))
     }
@@ -50,10 +50,10 @@ pub async fn list(User(user): User) -> impl IntoResponse {
         .await
         .unwrap();
 
-    HtmlTemplate(templates::user::List {
+    templates::user::List {
         auth_user: Some(user),
         users,
-    })
+    }
 }
 
 pub async fn settings(
@@ -80,12 +80,12 @@ pub async fn settings(
     let settings = user_repo.load_info().await.unwrap();
 
     Ok(SetCookies::new(
-        HtmlTemplate(templates::user::Settings {
+        templates::user::Settings {
             auth_user: Some(user),
             message,
             user: path.user,
             settings,
-        }),
+        },
         cookies,
     ))
 }

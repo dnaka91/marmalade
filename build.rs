@@ -35,7 +35,7 @@ fn main() {
 fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStream {
     let highlight = syntect::html::css_for_theme_with_class_style(
         &ThemeSet::load_from_reader(&mut BufReader::new(Cursor::new(
-            &include_bytes!("assets/OneHalfLight.tmTheme")[..],
+            &include_bytes!("assets/OneHalfDark.tmTheme")[..],
         )))
         .unwrap(),
         ClassStyle::SpacedPrefixed {

@@ -1,15 +1,15 @@
 @import "initial-variables"
 @import "functions"
 
-$primary: $turquoise !default
+$primary: lighten($turquoise, 5%) !default
 
-$info: $cyan !default
-$success: $green !default
-$warning: $yellow !default
-$danger: $red !default
+$info: lighten($cyan, 5%) !default
+$success: lighten($green, 5%) !default
+$warning: lighten($yellow, 5%) !default
+$danger: lighten($red, 5%) !default
 
-$light: $white-ter !default
-$dark: $grey-darker !default
+$light: $black-ter !default
+$dark: $grey-lighter !default
 
 // Invert colors
 
@@ -42,30 +42,30 @@ $dark-invert: findColorInvert($dark) !default
 
 // General colors
 
-$scheme-main: $white !default
-$scheme-main-bis: $white-bis !default
-$scheme-main-ter: $white-ter !default
-$scheme-invert: $black !default
-$scheme-invert-bis: $black-bis !default
-$scheme-invert-ter: $black-ter !default
+$scheme-main: lighten($black, 5%) !default
+$scheme-main-bis: $black-bis !default
+$scheme-main-ter: $black-ter !default
+$scheme-invert: $white !default
+$scheme-invert-bis: $white-bis !default
+$scheme-invert-ter: $white-ter !default
 
-$background: $white-ter !default
+$background: $black-ter !default
 
-$border: $grey-lighter !default
-$border-hover: $grey-light !default
-$border-light: $grey-lightest !default
-$border-light-hover: $grey-light !default
+$border: $grey-darker !default
+$border-hover: $grey-dark !default
+$border-light: $black-ter !default
+$border-light-hover: $grey-dark !default
 
 // Text colors
 
-$text: $grey-dark !default
+$text: $grey-light !default
 $text-invert: findColorInvert($text) !default
 $text-light: $grey !default
-$text-strong: $grey-darker !default
+$text-strong: $grey-lighter !default
 
 // Code colors
 
-$code: darken($red, 15%) !default
+$code: lighten($red, 5%) !default
 $code-background: $background !default
 
 $pre: $text !default
@@ -73,20 +73,20 @@ $pre-background: $background !default
 
 // Link colors
 
-$link: $blue !default
+$link: lighten($blue, 5%) !default
 $link-invert: findColorInvert($link) !default
 $link-light: findLightColor($link) !default
 $link-dark: findDarkColor($link) !default
 $link-visited: $purple !default
 
-$link-hover: $grey-darker !default
-$link-hover-border: $grey-light !default
+$link-hover: $grey-lighter !default
+$link-hover-border: $grey-dark !default
 
-$link-focus: $grey-darker !default
+$link-focus: $grey-lighter !default
 $link-focus-border: $blue !default
 
-$link-active: $grey-darker !default
-$link-active-border: $grey-dark !default
+$link-active: $grey-lighter !default
+$link-active-border: $grey-light !default
 
 // Typography
 
@@ -101,7 +101,7 @@ $size-large: $size-4 !default
 
 // Effects
 
-$shadow: 0 0.5em 1em -0.125em rgba($scheme-invert, 0.1), 0 0px 0 1px rgba($scheme-invert, 0.02) !default
+$shadow: 0 0 0 0.1em rgba($scheme-invert, 0.1), 0 0px 0 0px rgba($scheme-invert, 0.02) !default
 
 // Lists and maps
 $custom-colors: null !default

@@ -109,7 +109,9 @@
     {% when TreeKind::Text with (content) %}
     <div class="box">
       <h1 class="title">{{ tree.name }}</h1>
-      <pre class="highlight-code"><code>{{ content|safe }}</code></pre>
+      <div class="content">
+        <pre class="highlight-code"><code>{{ content|safe }}</code></pre>
+      </div>
     </div>
 
     {% when TreeKind::Binary with (size) %}

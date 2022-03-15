@@ -8,4 +8,5 @@ exceptions = [
 [bans]
 skip = [
     { name = "tokio-util", version = "=0.6.9" },
+    { name = "wasi", version = "=0.10.2" },
 ]

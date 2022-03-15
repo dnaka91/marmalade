@@ -123,10 +123,9 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
 
     let syntax = quote! {
         pub const WEBFONTS_ROUTE: &str = #route;
-        pub const WEBFONTS_CONTENT: &[&[u8]] = &[#(#contents),*];
-        pub const WEBFONTS_NAME: &[&str] = &[#(#names),*];
-        #[allow(clippy::declare_interior_mutable_const)]
-        pub const WEBFONTS_HASH: Lazy<Vec<ETag>> = Lazy::new(|| {
+        pub static WEBFONTS_CONTENT: &[&[u8]] = &[#(#contents),*];
+        pub static WEBFONTS_NAME: &[&str] = &[#(#names),*];
+        pub static WEBFONTS_HASH: Lazy<Vec<ETag>> = Lazy::new(|| {
             [#(#hashes),*].iter().map(|&hash| hash.parse().unwrap()).collect()
         });
     };

@@ -771,6 +771,7 @@ dependencies = [
  "serde_test",
  "syntect",
  "tokio",
+ "tokio-shutdown",
  "tokio-util 0.7.0",
  "tower",
  "tower-http",
@@ -1358,6 +1359,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "tokio-shutdown"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24298d1d75152f11d0474cfd783403f65dd44c88bbb38ca9f53e4dab27814319"
+dependencies = [
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

@@ -14,7 +14,7 @@ use axum::{
     routing::{get, post},
     Router, Server,
 };
-use tokio::signal;
+use tokio_shutdown::Shutdown;
 use tower::{util::AndThenLayer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level};
@@ -59,6 +59,7 @@ async fn main() -> Result<()> {
     SettingsRepository::init().await?;
 
     let addr = SocketAddr::from((ADDRESS, 8080));
+    let shutdown = Shutdown::new()?;
 
     let server = Server::try_bind(&addr)?
         .serve(
@@ -114,16 +115,11 @@ async fn main() -> Result<()> {
                 )
                 .into_make_service(),
         )
-        .with_graceful_shutdown(shutdown());
+        .with_graceful_shutdown(shutdown.handle());
 
-    info!("Listening on {}", addr);
+    info!("Listening on http://{}", addr);
 
     server.await?;
 
     Ok(())
-}
-
-async fn shutdown() {
-    signal::ctrl_c().await.ok();
-    info!("Shutting down");
 }

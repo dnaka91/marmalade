@@ -74,15 +74,14 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
         hasher.finish()
     };
     let route = format!("/main-{:016x}.css", hash);
-    let etag = format!("\"W/{:016x}\"", hash);
+    let etag = format!("W/\"{:016x}\"", hash);
 
     std::fs::write(out.join("main.css"), css).unwrap();
 
     quote! {
-        pub const MAIN_CSS_CONTENT: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
         pub const MAIN_CSS_ROUTE: &str = #route;
-        #[allow(clippy::declare_interior_mutable_const)]
-        pub const MAIN_CSS_HASH: Lazy<ETag> =Lazy::new(|| #etag.parse().unwrap());
+        pub static MAIN_CSS_CONTENT: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
+        pub static MAIN_CSS_HASH: Lazy<ETag> =Lazy::new(|| #etag.parse().unwrap());
     }
 }
 

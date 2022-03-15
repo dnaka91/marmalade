@@ -1,6 +1,6 @@
 use std::{
     collections::hash_map::DefaultHasher,
-    env,
+    env, fs,
     hash::Hasher,
     io::{BufReader, Cursor},
     path::{Path, PathBuf},
@@ -29,7 +29,7 @@ fn main() {
         #webfonts
     };
 
-    std::fs::write(out.join("assets.rs"), syntax.to_string()).unwrap();
+    fs::write(out.join("assets.rs"), syntax.to_string()).unwrap();
 }
 
 fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStream {
@@ -46,15 +46,15 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
     let sass = formatdoc! {r#"
         @charset "utf-8";
 
-        $fa-font-path: "{}";
+        $fa-font-path: "{webfonts_route}";
+        $fc-font-path: "{webfonts_route}";
         @import "assets/main.sass";
 
         /*!
          * Syntect themes
          */
-        {}
-        "#,
-        webfonts_route, highlight
+        {highlight}
+        "#
     };
 
     let css = sass_rs::compile_string(
@@ -73,10 +73,10 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
         hasher.write(css.as_bytes());
         hasher.finish()
     };
-    let route = format!("/main-{:016x}.css", hash);
-    let etag = format!("W/\"{:016x}\"", hash);
+    let route = format!("/main-{hash:016x}.css");
+    let etag = format!("W/\"{hash:016x}\"");
 
-    std::fs::write(out.join("main.css"), css).unwrap();
+    fs::write(out.join("main.css"), css).unwrap();
 
     quote! {
         pub const MAIN_CSS_ROUTE: &str = #route;
@@ -87,8 +87,9 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
 
 fn render_webfonts(root: &str) -> (TokenStream, String) {
     let entries = {
-        let mut entries = std::fs::read_dir(format!("{}/assets/fontawesome/webfonts", root))
+        let mut entries = fs::read_dir(format!("{root}/assets/fontawesome/webfonts"))
             .unwrap()
+            .chain(fs::read_dir(format!("{root}/assets/firacode/woff2")).unwrap())
             .map(|entry| entry.unwrap())
             .collect::<Vec<_>>();
         entries.sort_by_key(|e| e.file_name());
@@ -101,7 +102,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
     let mut folder_hash = DefaultHasher::new();
 
     for entry in entries {
-        let content = std::fs::read(entry.path()).unwrap();
+        let content = fs::read(entry.path()).unwrap();
         let hash = {
             let mut hasher = DefaultHasher::new();
             hasher.write(&content);
@@ -109,7 +110,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
         };
         let path = entry.path().into_os_string().into_string().unwrap();
         let name = format!("/{}", entry.file_name().into_string().unwrap());
-        let etag = format!("W/\"{:016x}\"", hash);
+        let etag = format!("W/\"{hash:016x}\"");
 
         contents.push(quote! { include_bytes!(#path) });
         names.push(name);
@@ -118,7 +119,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
     }
 
     let base_route = format!("/webfonts-{:016x}", folder_hash.finish());
-    let route = format!("{}/*path", base_route);
+    let route = format!("{base_route}/*path");
 
     let syntax = quote! {
         pub const WEBFONTS_ROUTE: &str = #route;

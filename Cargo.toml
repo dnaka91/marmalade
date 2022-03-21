@@ -7,7 +7,7 @@ license = "AGPL-3.0-only"
 
 [dependencies]
 anyhow = "1.0.56"
-argon2 = { version = "0.3.4", features = ["std"] }
+argon2 = { version = "0.4.0", features = ["std"] }
 askama = { version = "0.11.1", default-features = false, features = ["urlencode", "with-axum"] }
 askama_axum = "0.1.0"
 axum = { version = "0.4.8", features = ["headers", "http2"] }
@@ -42,7 +42,7 @@ serde_test = "1.0.136"
 [build-dependencies]
 indoc = "1.0.4"
 proc-macro2 = "1.0.36"
-quote = "1.0.15"
+quote = "1.0.16"
 sass-rs = "0.2.2"
 syntect = "4.6.0"
 

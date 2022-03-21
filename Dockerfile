@@ -23,7 +23,6 @@ RUN apk add --no-cache git=2.34.1-r0 && \
 COPY --from=builder /volume/target/x86_64-unknown-linux-musl/release/marmalade /bin/
 
 EXPOSE 8080
-STOPSIGNAL SIGINT
 USER marmalade
 
 ENTRYPOINT ["/bin/marmalade"]

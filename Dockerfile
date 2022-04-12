@@ -1,4 +1,4 @@
-FROM rust:1.59 as builder
+FROM rust:1.60 as builder
 
 WORKDIR /volume
 
@@ -11,8 +11,7 @@ COPY src/ src/
 COPY templates/ templates/
 COPY build.rs Cargo.lock Cargo.toml ./
 
-RUN cargo build --release --target x86_64-unknown-linux-musl && \
-    strip --strip-all target/x86_64-unknown-linux-musl/release/marmalade
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM alpine:3.15
 

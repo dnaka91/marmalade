@@ -15,7 +15,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM alpine:3.15
 
-RUN apk add --no-cache git=2.34.1-r0 && \
+RUN apk add --no-cache git=~2.34 && \
     addgroup -g 1000 marmalade && \
     adduser -u 1000 -G marmalade -D -g '' -H -h /dev/null -s /sbin/nologin marmalade
 

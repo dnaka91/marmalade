@@ -48,3 +48,4 @@ syntect = "4.6.0"
 
 [profile.release]
 lto = true
+strip = true

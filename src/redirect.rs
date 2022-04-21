@@ -4,23 +4,23 @@ use axum::response::Redirect;
 use percent_encoding::NON_ALPHANUMERIC;
 
 pub fn to_root() -> Redirect {
-    Redirect::to("/".parse().unwrap())
+    Redirect::to("/")
 }
 
 pub fn to_login() -> Redirect {
-    Redirect::to("/login".parse().unwrap())
+    Redirect::to("/login")
 }
 
 pub fn to_register() -> Redirect {
-    Redirect::to("/register".parse().unwrap())
+    Redirect::to("/register")
 }
 
 pub fn to_repo_create() -> Redirect {
-    Redirect::to("/repo/create".parse().unwrap())
+    Redirect::to("/repo/create")
 }
 
 pub fn to_admin_settings() -> Redirect {
-    Redirect::to("/settings".parse().unwrap())
+    Redirect::to("/settings")
 }
 
 pub fn to_repo_index(user: &str, repo: &str) -> Redirect {
@@ -33,7 +33,7 @@ pub fn to_repo_index(user: &str, repo: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(format!("/{}/{}", user, repo).parse().unwrap())
+    Redirect::to(&format!("/{}/{}", user, repo))
 }
 
 pub fn to_repo_settings(user: &str, repo: &str) -> Redirect {
@@ -46,7 +46,7 @@ pub fn to_repo_settings(user: &str, repo: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(format!("/{}/{}/settings", user, repo).parse().unwrap())
+    Redirect::to(&format!("/{}/{}/settings", user, repo))
 }
 
 pub fn to_user_index(user: &str) -> Redirect {
@@ -55,7 +55,7 @@ pub fn to_user_index(user: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(format!("/{}", user).parse().unwrap())
+    Redirect::to(&format!("/{}", user))
 }
 
 pub fn to_user_settings(user: &str) -> Redirect {
@@ -64,7 +64,7 @@ pub fn to_user_settings(user: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(format!("/{}/settings", user).parse().unwrap())
+    Redirect::to(&format!("/{}/settings", user))
 }
 
 #[cfg(test)]

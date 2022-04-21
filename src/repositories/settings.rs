@@ -95,7 +95,7 @@ pub async fn load() -> Result<Settings> {
         Err(e) => return Err(e).context("failed loading settings"),
     };
 
-    Ok(serde_json::from_slice(&buf).context("failed parsing settings")?)
+    serde_json::from_slice(&buf).context("failed parsing settings")
 }
 
 async fn save(settings: &Settings) -> Result<()> {

@@ -2,8 +2,8 @@ use std::convert::TryInto;
 
 use axum::{
     body::BoxBody,
-    http::{header::SET_COOKIE, Response, StatusCode},
-    response::IntoResponse,
+    http::{header::SET_COOKIE, StatusCode},
+    response::{IntoResponse, Response},
 };
 
 use crate::{cookies::Cookies, templates};
@@ -11,7 +11,7 @@ use crate::{cookies::Cookies, templates};
 pub struct StatusTemplate(pub StatusCode);
 
 impl IntoResponse for StatusTemplate {
-    fn into_response(self) -> Response<BoxBody> {
+    fn into_response(self) -> Response {
         let mut res = templates::Error {
             code: self.0,
             message: None,

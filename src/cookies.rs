@@ -88,20 +88,18 @@ pub fn generate_key() -> [u8; 64] {
     key
 }
 
-fn get_cookie_jar(map: Option<&HeaderMap>) -> cookie::CookieJar {
+fn get_cookie_jar(map: &HeaderMap) -> cookie::CookieJar {
     let mut jar = cookie::CookieJar::new();
 
-    if let Some(map) = map {
-        for cookie in map.get_all(COOKIE) {
-            let cookie = match cookie.to_str() {
-                Ok(value) => value,
-                Err(_) => continue,
-            };
+    for cookie in map.get_all(COOKIE) {
+        let cookie = match cookie.to_str() {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
 
-            for part in cookie.split(';').map(str::trim) {
-                if let Ok(cookie) = part.parse() {
-                    jar.add_original(cookie);
-                }
+        for part in cookie.split(';').map(str::trim) {
+            if let Ok(cookie) = part.parse() {
+                jar.add_original(cookie);
             }
         }
     }

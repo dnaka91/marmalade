@@ -105,7 +105,7 @@ pub async fn tree(
                             .find_syntax_by_extension(ext)
                             .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
 
-                        *text = highlight_code(text, syntax);
+                        *text = highlight_code(text, syntax).unwrap();
                     }
                 }
                 TreeKind::Binary(_) => {}
@@ -335,7 +335,7 @@ fn render_markdown(text: &str) -> String {
                 }
                 Event::Text(text) => {
                     if let Some(syntax) = syntax {
-                        Event::Html(highlight_code(&text, syntax).into())
+                        Event::Html(highlight_code(&text, syntax).unwrap().into())
                     } else {
                         Event::Text(text)
                     }
@@ -355,7 +355,7 @@ fn render_markdown(text: &str) -> String {
     html
 }
 
-fn highlight_code(text: &str, syntax: &SyntaxReference) -> String {
+fn highlight_code(text: &str, syntax: &SyntaxReference) -> Result<String, syntect::Error> {
     let mut gen = ClassedHTMLGenerator::new_with_class_style(
         syntax,
         &*SYNTAX_SET,
@@ -365,8 +365,8 @@ fn highlight_code(text: &str, syntax: &SyntaxReference) -> String {
     );
 
     for line in LinesWithEndings::from(text) {
-        gen.parse_html_for_line_which_includes_newline(line);
+        gen.parse_html_for_line_which_includes_newline(line)?;
     }
 
-    gen.finalize()
+    Ok(gen.finalize())
 }

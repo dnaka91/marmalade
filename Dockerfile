@@ -1,4 +1,4 @@
-FROM rust:1.60 as builder
+FROM rust:1.61 as builder
 
 WORKDIR /volume
 
@@ -13,9 +13,9 @@ COPY build.rs Cargo.lock Cargo.toml ./
 
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-FROM alpine:3.15
+FROM alpine:3.16
 
-RUN apk add --no-cache git=~2.34 && \
+RUN apk add --no-cache git=~2.36 && \
     addgroup -g 1000 marmalade && \
     adduser -u 1000 -G marmalade -D -g '' -H -h /dev/null -s /sbin/nologin marmalade
 

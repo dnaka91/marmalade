@@ -43,7 +43,8 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
         ClassStyle::SpacedPrefixed {
             prefix: "highlight-",
         },
-    );
+    )
+    .unwrap();
 
     let sass = formatdoc! {r#"
         @charset "utf-8";

@@ -44,7 +44,7 @@ impl FromStr for LoginError {
         Ok(match s {
             "LoginError::Empty" => Self::Empty,
             "LoginError::UnknownUser" => Self::UnknownUser,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }
@@ -80,7 +80,7 @@ impl FromStr for RegisterError {
             "RegisterError::InvalidUsername" => Self::InvalidUsername,
             "RegisterError::InvalidPassword" => Self::InvalidPassword,
             "RegisterError::UsernameTaken" => Self::UsernameTaken,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }

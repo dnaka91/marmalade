@@ -5,11 +5,6 @@ exceptions = [
     { allow = ["AGPL-3.0"], name = "marmalade", version = "*" },
 ]
 
-[bans]
-skip = [
-    { name = "wasi", version = "=0.10.2" },
-]
-
 [sources]
 allow-git = [
 	"https://github.com/djc/askama.git",

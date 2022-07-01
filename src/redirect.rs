@@ -33,7 +33,7 @@ pub fn to_repo_index(user: &str, repo: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(&format!("/{}/{}", user, repo))
+    Redirect::to(&format!("/{user}/{repo}"))
 }
 
 pub fn to_repo_settings(user: &str, repo: &str) -> Redirect {
@@ -46,7 +46,7 @@ pub fn to_repo_settings(user: &str, repo: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(&format!("/{}/{}/settings", user, repo))
+    Redirect::to(&format!("/{user}/{repo}/settings"))
 }
 
 pub fn to_user_index(user: &str) -> Redirect {
@@ -55,7 +55,7 @@ pub fn to_user_index(user: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(&format!("/{}", user))
+    Redirect::to(&format!("/{user}"))
 }
 
 pub fn to_user_settings(user: &str) -> Redirect {
@@ -64,7 +64,7 @@ pub fn to_user_settings(user: &str) -> Redirect {
         NON_ALPHANUMERIC,
     ));
 
-    Redirect::to(&format!("/{}/settings", user))
+    Redirect::to(&format!("/{user}/settings"))
 }
 
 #[cfg(test)]

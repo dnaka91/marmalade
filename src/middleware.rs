@@ -77,7 +77,7 @@ where
                 let path = req.uri().path().to_owned();
                 let mut resp = inner.call(req).await?;
 
-                match format!("{}{}", onion, path).try_into() {
+                match format!("{onion}{path}").try_into() {
                     Ok(loc) => {
                         resp.headers_mut().append("Onion-Location", loc);
                     }

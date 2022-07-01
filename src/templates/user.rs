@@ -60,7 +60,7 @@ impl FromStr for UserSettingsMessage {
         Ok(match s {
             "UserSettingsMessage::Success" => Self::Success,
             "UserSettingsMessage::InvalidPassword" => Self::InvalidPassword,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }

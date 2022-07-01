@@ -26,7 +26,7 @@ impl<'de> Visitor<'de> for FormBoolVisitor {
         if v == "on" {
             Ok(true)
         } else {
-            Err(E::custom(format!("unknown boolean value `{}`", v)))
+            Err(E::custom(format!("unknown boolean value `{v}`")))
         }
     }
 }

@@ -31,7 +31,7 @@ pub struct SetCookies<T> {
     cookies: Cookies,
 }
 
-impl<'a, T> SetCookies<T> {
+impl<T> SetCookies<T> {
     pub fn new(inner: T, cookies: Cookies) -> Self {
         Self { inner, cookies }
     }

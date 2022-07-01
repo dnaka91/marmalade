@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
         )
         .with_graceful_shutdown(shutdown.handle());
 
-    info!("Listening on http://{}", addr);
+    info!("Listening on http://{addr}");
 
     server.await?;
 

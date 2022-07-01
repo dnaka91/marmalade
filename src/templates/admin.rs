@@ -35,7 +35,7 @@ impl FromStr for ServerSettingsMessage {
         Ok(match s {
             "ServerSettingsMessage::Success" => Self::Success,
             "ServerSettingsMessage::FailedReset" => Self::FailedReset,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }

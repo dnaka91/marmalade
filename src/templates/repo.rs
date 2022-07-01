@@ -84,7 +84,7 @@ impl FromStr for RepoCreateError {
         Ok(match s {
             "RepoCreateError::InvalidName" => Self::InvalidName,
             "RepoCreateError::AlreadyExists" => Self::AlreadyExists,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }
@@ -126,7 +126,7 @@ impl FromStr for RepoSettingsMessage {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "RepoSettingsMessage::Success" => Self::Success,
-            _ => bail!("unknown variant `{}`", s),
+            _ => bail!("unknown variant `{s}`"),
         })
     }
 }

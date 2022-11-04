@@ -27,7 +27,7 @@ pub async fn favicon_32(
 ) -> AssetResponse {
     info!("got assets favicon-32 request");
     favicon(
-        &*assets::FAVICON_X32_HASH,
+        &assets::FAVICON_X32_HASH,
         assets::FAVICON_X32_CONTENT,
         mime::IMAGE_PNG,
         if_modified_since,
@@ -41,7 +41,7 @@ pub async fn favicon_16(
 ) -> AssetResponse {
     info!("got assets favicon-16 request");
     favicon(
-        &*assets::FAVICON_X16_HASH,
+        &assets::FAVICON_X16_HASH,
         assets::FAVICON_X16_CONTENT,
         mime::IMAGE_PNG,
         if_modified_since,
@@ -55,7 +55,7 @@ pub async fn main_css(
 ) -> impl IntoResponse {
     info!("got assets main-css request");
     favicon(
-        &*assets::MAIN_CSS_HASH,
+        &assets::MAIN_CSS_HASH,
         assets::MAIN_CSS_CONTENT,
         mime::TEXT_CSS,
         if_modified_since,

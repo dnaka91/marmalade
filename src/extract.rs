@@ -52,7 +52,7 @@ where
             repo.is_valid_token(user.token)
                 .await
                 .map_err(|_| INTERNAL_SERVER_ERROR)?
-                .then(|| user)
+                .then_some(user)
                 .ok_or(FORBIDDEN)
         } else {
             Err(FORBIDDEN)

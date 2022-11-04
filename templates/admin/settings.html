@@ -24,6 +24,37 @@
     {% endif %}
 
     <div class="box">
+      <h4 class="title is-4">Tracing</h4>
+
+      <form method="POST" action="/settings/tracing">
+
+        <div class="field">
+          <label class="label" for="name">Quiver address</label>
+          <div class="control">
+            <input class="input" id="quiver_address" name="address" value="{{ self.quiver_address() }}">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="description">Quiver certificate</label>
+          <div class="control">
+            <textarea class="textarea" id="quiver_certificate" name="certificate" rows="8">
+              {{- self.quiver_certificate() -}}
+            </textarea>
+          </div>
+        </div>
+
+        <button class="button is-primary">
+          <span class="icon">
+            <i class="fas fa-save"></i>
+          </span>
+          <span>Save</span>
+        </button>
+
+      </form>
+    </div>
+
+    <div class="box">
       <h4 class="title is-4">Tor</h4>
 
       <form method="POST" action="/settings/tor">

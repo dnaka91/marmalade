@@ -5,6 +5,7 @@ pub struct Settings {
     #[serde(with = "crate::ser::hex")]
     pub key: [u8; 64],
     pub tor: Option<Tor>,
+    pub tracing: Option<Tracing>,
 }
 
 impl Default for Settings {
@@ -12,6 +13,7 @@ impl Default for Settings {
         Self {
             key: [0; 64],
             tor: None,
+            tracing: None,
         }
     }
 }
@@ -19,6 +21,17 @@ impl Default for Settings {
 #[derive(Default, Serialize, Deserialize)]
 pub struct Tor {
     pub onion: String,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct Tracing {
+    pub quiver: Option<Quiver>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Quiver {
+    pub address: String,
+    pub certificate: String,
 }
 
 #[derive(Serialize, Deserialize)]

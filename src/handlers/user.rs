@@ -4,7 +4,7 @@ use axum::{
     response::IntoResponse,
 };
 use serde::Deserialize;
-use tracing::info;
+use tracing::{info, instrument};
 
 use crate::{
     cookies::{Cookie, Cookies},
@@ -21,11 +21,12 @@ pub struct BasePath {
     pub user: String,
 }
 
+#[instrument(skip_all, fields(?path.user))]
 pub async fn index(
     User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, "got user index request");
+    info!("got user index request");
 
     let user_repo = UserRepository::for_user(&path.user);
 
@@ -42,6 +43,7 @@ pub async fn index(
     }
 }
 
+#[instrument(skip_all)]
 pub async fn list(User(user): User) -> impl IntoResponse {
     info!("got user list request");
 
@@ -56,12 +58,13 @@ pub async fn list(User(user): User) -> impl IntoResponse {
     }
 }
 
+#[instrument(skip_all, fields(?path.user))]
 pub async fn settings(
     User(user): User,
     Path(path): Path<BasePath>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, "got user settings request");
+    info!("got user settings request");
 
     let user_repo = UserRepository::for_user(&path.user);
 
@@ -97,13 +100,14 @@ pub struct Settings {
     private: bool,
 }
 
+#[instrument(skip_all, fields(?path.user))]
 pub async fn settings_post(
     User(user): User,
     Path(path): Path<BasePath>,
     Form(settings): Form<Settings>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, "got user settings request");
+    info!("got user settings request");
 
     let user_repo = UserRepository::for_user(&path.user);
 
@@ -134,13 +138,14 @@ pub struct NewPassword {
     password: String,
 }
 
+#[instrument(skip_all, fields(?path.user))]
 pub async fn password_post(
     User(user): User,
     Path(path): Path<BasePath>,
     Form(pw): Form<NewPassword>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, "got user password request");
+    info!("got user password request");
 
     let user_repo = UserRepository::for_user(&path.user);
 

@@ -7,6 +7,7 @@ use argon2::{
 };
 use camino::Utf8PathBuf;
 use tokio::fs;
+use tracing::instrument;
 use uuid::Uuid;
 
 use super::RepoRepository;
@@ -25,10 +26,12 @@ impl<'a> UserRepository<'a> {
         RepoRepository::for_repo(self.user, name)
     }
 
+    #[instrument(skip_all)]
     pub async fn exists(&self) -> bool {
         fs::metadata(DIRS.user_info_file(self.user)).await.is_ok()
     }
 
+    #[instrument(skip_all)]
     pub async fn visible(&self, auth_user: &str, user: &str) -> Result<bool> {
         if auth_user == user {
             return Ok(true);
@@ -37,6 +40,7 @@ impl<'a> UserRepository<'a> {
         Ok(!self.load_info().await?.private)
     }
 
+    #[instrument(skip_all)]
     pub async fn create_user(&self, info: CreateUser<'_>) -> Result<bool> {
         if self.exists().await {
             return Ok(false);
@@ -57,6 +61,7 @@ impl<'a> UserRepository<'a> {
         Ok(true)
     }
 
+    #[instrument(skip_all)]
     pub async fn is_valid_password(&self, password: &str) -> Result<bool> {
         let user_file = fs::read(DIRS.user_info_file(self.user)).await?;
 
@@ -65,6 +70,7 @@ impl<'a> UserRepository<'a> {
         verify_password(password, &data.password)
     }
 
+    #[instrument(skip_all)]
     pub async fn is_valid_token(&self, token: Uuid) -> Result<bool> {
         let token_file = fs::read(DIRS.user_tokens_file(self.user)).await?;
 
@@ -73,6 +79,7 @@ impl<'a> UserRepository<'a> {
         Ok(tokens.contains(&token))
     }
 
+    #[instrument(skip_all)]
     pub async fn add_token(&self, token: Uuid) -> Result<()> {
         self.edit_tokens(|tokens| {
             tokens.insert(token);
@@ -80,6 +87,7 @@ impl<'a> UserRepository<'a> {
         .await
     }
 
+    #[instrument(skip_all)]
     pub async fn remove_token(&self, token: Uuid) -> Result<()> {
         self.edit_tokens(|tokens| {
             tokens.remove(&token);
@@ -87,6 +95,7 @@ impl<'a> UserRepository<'a> {
         .await
     }
 
+    #[instrument(skip_all)]
     pub async fn list_user_names(&self, auth_user: &str) -> Result<Vec<String>> {
         let mut entries = fs::read_dir(DIRS.users_dir()).await?;
         let mut names = Vec::new();
@@ -105,6 +114,7 @@ impl<'a> UserRepository<'a> {
         Ok(names)
     }
 
+    #[instrument(skip_all)]
     pub async fn list_repo_names(&self, auth_user: &str) -> Result<Vec<(String, String)>> {
         let mut entries = fs::read_dir(DIRS.user_repos_dir(self.user)).await?;
         let mut names = Vec::new();
@@ -124,6 +134,7 @@ impl<'a> UserRepository<'a> {
         Ok(names)
     }
 
+    #[instrument(skip_all)]
     async fn edit_tokens(&self, edit: impl Fn(&mut HashSet<Uuid>)) -> Result<()> {
         let real_file = DIRS.user_tokens_file(self.user);
         let temp_file = DIRS.user_tokens_temp_file(self.user);
@@ -143,11 +154,13 @@ impl<'a> UserRepository<'a> {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn load_info(&self) -> Result<UserAccount> {
         let data = fs::read(DIRS.user_info_file(self.user)).await?;
         serde_json::from_slice(&data).map_err(Into::into)
     }
 
+    #[instrument(skip_all)]
     pub async fn save_info(&self, info: &UserAccount) -> Result<()> {
         let real_file = DIRS.user_info_file(self.user);
         let temp_file = DIRS.user_info_temp_file(self.user);
@@ -159,6 +172,7 @@ impl<'a> UserRepository<'a> {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn change_password(&self, password: &str) -> Result<()> {
         let mut info = self.load_info().await?;
         info.password = hash_password(password)?;
@@ -167,6 +181,7 @@ impl<'a> UserRepository<'a> {
         self.clear_tokens().await
     }
 
+    #[instrument(skip_all)]
     pub async fn clear_tokens(&self) -> Result<()> {
         self.edit_tokens(HashSet::clear).await
     }
@@ -179,6 +194,7 @@ pub struct CreateUser<'a> {
     pub admin: bool,
 }
 
+#[instrument(skip_all)]
 fn hash_password(password: &str) -> Result<String> {
     let salt = SaltString::generate(&mut OsRng);
     let hasher = Argon2::default();
@@ -188,6 +204,7 @@ fn hash_password(password: &str) -> Result<String> {
         .to_string())
 }
 
+#[instrument(skip_all)]
 fn verify_password(password: &str, hash: &str) -> Result<bool> {
     let hash = PasswordHash::new(hash)?;
     let hasher = Argon2::default();

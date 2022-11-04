@@ -12,7 +12,7 @@ use syntect::{
     parsing::{SyntaxDefinition, SyntaxReference, SyntaxSet},
     util::LinesWithEndings,
 };
-use tracing::info;
+use tracing::{info, instrument};
 
 use crate::{
     cookies::{Cookie, Cookies},
@@ -32,11 +32,12 @@ pub struct BasePath {
     pub repo: String,
 }
 
+#[instrument(skip_all, fields(?path.user, ?path.repo))]
 pub async fn index(
     User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, ?path.repo, "got repo index request");
+    info!("got repo index request");
 
     let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
@@ -79,12 +80,13 @@ pub struct TreeQuery {
     pub branch: String,
 }
 
+#[instrument(skip_all, fields(?user.username, ?tree.user, ?tree.repo, ?tree.path, ?query.branch))]
 pub async fn tree(
     User(user): User,
     Path(tree): Path<Tree>,
     Query(query): Query<TreeQuery>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?user.username, ?tree.user, ?tree.repo, ?tree.path, ?query.branch, "got repo tree request");
+    info!("got repo tree request");
 
     let repo_repo = RepoRepository::for_repo(&tree.user, &tree.repo);
 
@@ -128,8 +130,9 @@ pub async fn tree(
     }
 }
 
+#[instrument(skip_all, fields(?user.username))]
 pub async fn create(User(user): User, mut cookies: Cookies) -> impl IntoResponse {
-    info!(?user.username, "got repo create request");
+    info!("got repo create request");
 
     let error = cookies
         .get(COOKIE_ERROR)
@@ -150,12 +153,13 @@ pub struct Create {
     private: bool,
 }
 
+#[instrument(skip_all, fields(?user.username, ?create.name))]
 pub async fn create_post(
     User(user): User,
     Form(create): Form<Create>,
     mut cookies: Cookies,
 ) -> impl IntoResponse {
-    info!(?user.username, ?create.name, "got repo create request");
+    info!("got repo create request");
 
     if !validate::repository(&create.name) {
         cookies.add(Cookie::new(
@@ -186,11 +190,12 @@ pub async fn create_post(
     }
 }
 
+#[instrument(skip_all, fields(?path.user, ?path.repo))]
 pub async fn delete(
     User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, ?path.repo, "got repo delete request");
+    info!("got repo delete request");
 
     let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
@@ -201,11 +206,12 @@ pub async fn delete(
     Ok(templates::repo::Delete { repo: path.repo })
 }
 
+#[instrument(skip_all, fields(?path.user, ?path.repo))]
 pub async fn delete_post(
     User(user): User,
     Path(path): Path<BasePath>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, ?path.repo, "got repo delete request");
+    info!("got repo delete request");
 
     let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
@@ -218,12 +224,13 @@ pub async fn delete_post(
     Ok(redirect::to_user_index(&path.user))
 }
 
+#[instrument(skip_all, fields(?path.user, ?path.repo))]
 pub async fn settings(
     User(user): User,
     Path(path): Path<BasePath>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, ?path.repo, "got repo settings request");
+    info!("got repo settings request");
 
     let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
@@ -265,13 +272,14 @@ pub struct Settings {
     private: bool,
 }
 
+#[instrument(skip_all, fields(?path.user, ?path.repo))]
 pub async fn settings_post(
     User(user): User,
     Path(path): Path<BasePath>,
     Form(settings): Form<Settings>,
     mut cookies: Cookies,
 ) -> Result<impl IntoResponse, StatusTemplate> {
-    info!(?path.user, ?path.repo, "got repo settings request");
+    info!("got repo settings request");
 
     let repo_repo = RepoRepository::for_repo(&path.user, &path.repo);
 
@@ -318,6 +326,7 @@ static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
 });
 
 #[allow(clippy::option_if_let_else)]
+#[instrument(skip_all)]
 fn render_markdown(text: &str) -> String {
     let default_syntax = SYNTAX_SET.find_syntax_plain_text();
     let mut syntax = None;
@@ -355,10 +364,11 @@ fn render_markdown(text: &str) -> String {
     html
 }
 
+#[instrument(skip_all)]
 fn highlight_code(text: &str, syntax: &SyntaxReference) -> Result<String, syntect::Error> {
     let mut gen = ClassedHTMLGenerator::new_with_class_style(
         syntax,
-        &*SYNTAX_SET,
+        &SYNTAX_SET,
         ClassStyle::SpacedPrefixed {
             prefix: "highlight-",
         },

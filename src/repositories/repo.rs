@@ -5,6 +5,7 @@ use camino::Utf8Path;
 use futures_util::FutureExt;
 use git2::{Blob, BranchType, ErrorCode, ObjectType, Repository, Tree};
 use tokio::fs;
+use tracing::instrument;
 
 use crate::{
     dirs::DIRS,
@@ -21,6 +22,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Self { user, repo }
     }
 
+    #[instrument(skip_all)]
     pub async fn exists(&self) -> bool {
         let (file, git) = tokio::join!(
             fs::metadata(DIRS.repo_info_file(self.user, self.repo)).map(|m| m.is_ok()),
@@ -30,6 +32,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         file && git
     }
 
+    #[instrument(skip_all)]
     pub async fn visible(&self, auth_user: &str, repo_user: &str) -> Result<bool> {
         if auth_user == repo_user {
             return Ok(true);
@@ -81,6 +84,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(true)
     }
 
+    #[instrument(skip_all)]
     pub async fn list_branches(&self) -> Result<Vec<String>> {
         if !self.exists().await {
             return Ok(vec!["master".to_owned()]);
@@ -110,6 +114,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(branches)
     }
 
+    #[instrument(skip_all)]
     pub async fn get_branch(&self) -> Result<String> {
         if !self.exists().await {
             return Ok("master".to_owned());
@@ -169,6 +174,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn get_readme(&self) -> Result<Option<String>> {
         if !self.exists().await {
             return Ok(None);
@@ -214,6 +220,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(readme)
     }
 
+    #[instrument(skip_all)]
     pub async fn get_file_list(&self) -> Result<Vec<RepoFile>> {
         if !self.exists().await {
             return Ok(Vec::new());
@@ -236,6 +243,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(list)
     }
 
+    #[instrument(skip_all)]
     pub async fn get_tree_list(
         &self,
         branch: &str,
@@ -290,6 +298,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
         Ok(list)
     }
 
+    #[instrument(skip_all)]
     pub async fn load_info(&self) -> Result<UserRepo> {
         let data = fs::read(DIRS.repo_info_file(self.user, self.repo)).await?;
         serde_json::from_slice(&data).map_err(Into::into)

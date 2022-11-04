@@ -6,21 +6,25 @@
 use std::{
     env,
     net::{Ipv4Addr, SocketAddr},
+    sync::Arc,
+    time::Duration,
 };
 
 use anyhow::Result;
 use axum::{
     handler::Handler,
     routing::{get, post},
-    Router, Server,
+    Extension, Router, Server,
 };
+use tokio::sync::Mutex;
 use tokio_shutdown::Shutdown;
 use tower::{util::AndThenLayer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
-use tracing::{info, Level};
-use tracing_subscriber::{filter::Targets, prelude::*};
+use tracing::{info, Level, Subscriber};
+use tracing_quiver::QuiverLayer;
+use tracing_subscriber::{filter::Targets, prelude::*, registry::LookupSpan, reload, Registry};
 
-use crate::{middleware::OnionLocationLayer, repositories::SettingsRepository};
+use crate::{middleware::OnionLocationLayer, models::Quiver, repositories::SettingsRepository};
 
 mod assets;
 mod cookies;
@@ -46,17 +50,9 @@ const ADDRESS: Ipv4Addr = if cfg!(debug_assertions) {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(
-            Targets::new()
-                .with_target(env!("CARGO_PKG_NAME"), Level::TRACE)
-                .with_target("tower_http", Level::TRACE)
-                .with_default(Level::INFO),
-        )
-        .init();
-
     SettingsRepository::init().await?;
+
+    let toggle = init_logging(SettingsRepository::new().get_tracing_quiver().await).await?;
 
     let addr = SocketAddr::from((ADDRESS, 8080));
     let shutdown = Shutdown::new()?;
@@ -88,6 +84,10 @@ async fn main() -> Result<()> {
                 .route(assets::FAVICON_X32_ROUTE, get(handlers::assets::favicon_32))
                 .route("/settings/dz", post(handlers::admin::settings_dz_post))
                 .route("/settings/tor", post(handlers::admin::settings_tor_post))
+                .route(
+                    "/settings/tracing",
+                    post(handlers::admin::settings_tracing_post),
+                )
                 .route("/settings", get(handlers::admin::settings))
                 .route("/users", get(handlers::user::list))
                 .route(
@@ -110,6 +110,7 @@ async fn main() -> Result<()> {
                         .layer(TraceLayer::new_for_http())
                         .layer(CompressionLayer::new())
                         .layer(OnionLocationLayer::new())
+                        .layer(Extension(Arc::new(toggle)))
                         .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),
                 )
@@ -122,4 +123,71 @@ async fn main() -> Result<()> {
     server.await?;
 
     Ok(())
+}
+
+pub struct TracingToggle {
+    reload: reload::Handle<Option<QuiverLayer<Registry>>, Registry>,
+    handle: Mutex<Option<tracing_quiver::Handle>>,
+}
+
+#[allow(clippy::missing_errors_doc)]
+impl TracingToggle {
+    pub async fn enable(&self, quiver: Quiver) -> Result<()> {
+        let (layer, handle) = init_tracing(quiver).await?;
+        self.reload.reload(Some(layer))?;
+        if let Some(handle) = self.handle.lock().await.replace(handle) {
+            handle.shutdown(Duration::from_secs(10)).await;
+        }
+
+        Ok(())
+    }
+
+    pub async fn disable(&self) -> Result<()> {
+        self.reload.reload(None)?;
+        if let Some(handle) = self.handle.lock().await.take() {
+            handle.shutdown(Duration::from_secs(10)).await;
+        }
+
+        Ok(())
+    }
+}
+
+async fn init_logging(quiver: Option<Quiver>) -> Result<TracingToggle> {
+    let (tracing, handle) = match quiver {
+        Some(settings) => {
+            let (layer, handle) = init_tracing(settings).await?;
+            (Some(layer), Some(handle))
+        }
+        None => (None, None),
+    };
+    let (tracing, reload) = reload::Layer::new(tracing);
+
+    tracing_subscriber::registry()
+        .with(tracing)
+        .with(tracing_subscriber::fmt::layer())
+        .with(
+            Targets::new()
+                .with_target(env!("CARGO_PKG_NAME"), Level::TRACE)
+                .with_target("tower_http", Level::TRACE)
+                .with_default(Level::INFO),
+        )
+        .init();
+
+    Ok(TracingToggle {
+        reload,
+        handle: Mutex::new(handle),
+    })
+}
+
+async fn init_tracing<S>(settings: Quiver) -> Result<(QuiverLayer<S>, tracing_quiver::Handle)>
+where
+    for<'span> S: Subscriber + LookupSpan<'span>,
+{
+    tracing_quiver::builder()
+        .with_server_addr(settings.address)
+        .with_server_cert(settings.certificate)
+        .with_resource(env!("CARGO_CRATE_NAME"), env!("CARGO_PKG_VERSION"))
+        .build()
+        .await
+        .map_err(Into::into)
 }

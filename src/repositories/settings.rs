@@ -7,7 +7,7 @@ use tokio::{fs, sync::RwLock};
 use crate::{
     cookies,
     dirs::DIRS,
-    models::{Quiver, Settings, Tor, Tracing},
+    models::{Archer, Settings, Tor, Tracing},
 };
 
 static STATE: Lazy<RwLock<Settings>> = Lazy::new(|| RwLock::new(Settings::default()));
@@ -49,20 +49,20 @@ impl SettingsRepository {
         STATE.read().await.tor.as_ref().map(|t| t.onion.clone())
     }
 
-    pub async fn get_tracing_quiver(&self) -> Option<Quiver> {
+    pub async fn get_tracing_archer(&self) -> Option<Archer> {
         STATE
             .read()
             .await
             .tracing
             .as_ref()
-            .and_then(|t| t.quiver.clone())
+            .and_then(|t| t.archer.clone())
     }
 
-    pub async fn set_tracing_quiver(&self, quiver: Option<Quiver>) -> Result<()> {
+    pub async fn set_tracing_archer(&self, archer: Option<Archer>) -> Result<()> {
         let mut settings = STATE.write().await;
         let tracing = settings.tracing.get_or_insert(Tracing::default());
 
-        tracing.quiver = quiver;
+        tracing.archer = archer;
 
         save(&settings).await
     }

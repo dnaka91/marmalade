@@ -94,6 +94,7 @@ where
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct OnionLocationLayer {
     _priv: (),
 }

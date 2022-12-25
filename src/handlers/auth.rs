@@ -33,7 +33,7 @@ pub struct Login {
     password: String,
 }
 
-pub async fn login_post(Form(login): Form<Login>, mut cookies: Cookies) -> impl IntoResponse {
+pub async fn login_post(mut cookies: Cookies, Form(login): Form<Login>) -> impl IntoResponse {
     info!(?login.username, "got auth login request");
 
     if login.username.is_empty() || login.password.is_empty() {
@@ -97,7 +97,7 @@ pub struct Register {
     private: bool,
 }
 
-pub async fn register_post(Form(login): Form<Register>, mut cookies: Cookies) -> impl IntoResponse {
+pub async fn register_post(mut cookies: Cookies, Form(login): Form<Register>) -> impl IntoResponse {
     info!(?login.username, "got auth register request");
 
     if !validate::username(&login.username) {

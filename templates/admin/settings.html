@@ -29,17 +29,17 @@
       <form method="POST" action="/settings/tracing">
 
         <div class="field">
-          <label class="label" for="name">Quiver address</label>
+          <label class="label" for="name">Archer address</label>
           <div class="control">
-            <input class="input" id="quiver_address" name="address" value="{{ self.quiver_address() }}">
+            <input class="input" id="archer_address" name="address" value="{{ self.archer_address() }}">
           </div>
         </div>
 
         <div class="field">
-          <label class="label" for="description">Quiver certificate</label>
+          <label class="label" for="description">Archer certificate</label>
           <div class="control">
-            <textarea class="textarea" id="quiver_certificate" name="certificate" rows="8">
-              {{- self.quiver_certificate() -}}
+            <textarea class="textarea" id="archer_certificate" name="certificate" rows="8">
+              {{- self.archer_certificate() -}}
             </textarea>
           </div>
         </div>

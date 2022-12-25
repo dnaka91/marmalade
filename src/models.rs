@@ -25,11 +25,11 @@ pub struct Tor {
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct Tracing {
-    pub quiver: Option<Quiver>,
+    pub archer: Option<Archer>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Quiver {
+pub struct Archer {
     pub address: String,
     pub certificate: String,
 }

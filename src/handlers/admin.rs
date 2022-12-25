@@ -1,13 +1,17 @@
 use std::sync::Arc;
 
-use axum::{extract::Form, http::StatusCode, response::IntoResponse, Extension};
+use axum::{
+    extract::{Form, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use serde::Deserialize;
 use tracing::{info, instrument};
 
 use crate::{
     cookies::{Cookie, Cookies},
     extract::User,
-    models::Quiver,
+    models::Archer,
     redirect,
     repositories::{SettingsRepository, UserRepository},
     response::{SetCookies, StatusTemplate},
@@ -42,7 +46,7 @@ pub async fn settings(
             auth_user: Some(user),
             message,
             onion: settings_repo.get_tor_onion().await.unwrap_or_default(),
-            quiver: settings_repo.get_tracing_quiver().await,
+            archer: settings_repo.get_tracing_archer().await,
         },
         cookies,
     ))
@@ -57,8 +61,8 @@ pub enum DangerZone {
 #[instrument(skip_all, fields(?user.username))]
 pub async fn settings_dz_post(
     User(user): User,
-    Form(danger_zone): Form<DangerZone>,
     mut cookies: Cookies,
+    Form(danger_zone): Form<DangerZone>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got admin settings request (danger zone)");
 
@@ -98,8 +102,8 @@ pub struct TorSettings {
 #[instrument(skip_all, fields(?user.username))]
 pub async fn settings_tor_post(
     User(user): User,
-    Form(settings): Form<TorSettings>,
     mut cookies: Cookies,
+    Form(settings): Form<TorSettings>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got admin settings request (tor)");
 
@@ -129,9 +133,9 @@ pub struct TracingSettings {
 #[instrument(skip_all, fields(?user.username))]
 pub async fn settings_tracing_post(
     User(user): User,
-    Form(settings): Form<TracingSettings>,
-    Extension(toggle): Extension<Arc<TracingToggle>>,
+    State(toggle): State<Arc<TracingToggle>>,
     mut cookies: Cookies,
+    Form(settings): Form<TracingSettings>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got admin settings request (tracing)");
 
@@ -142,19 +146,19 @@ pub async fn settings_tracing_post(
         return Err(StatusTemplate(StatusCode::NOT_FOUND));
     }
 
-    let quiver =
-        (!settings.address.is_empty() && !settings.certificate.is_empty()).then_some(Quiver {
+    let archer =
+        (!settings.address.is_empty() && !settings.certificate.is_empty()).then_some(Archer {
             address: settings.address,
             certificate: settings.certificate,
         });
 
     settings_repo
-        .set_tracing_quiver(quiver.clone())
+        .set_tracing_archer(archer.clone())
         .await
         .unwrap();
 
-    let res = if let Some(quiver) = quiver {
-        toggle.enable(quiver).await
+    let res = if let Some(archer) = archer {
+        toggle.enable(archer).await
     } else {
         toggle.disable().await
     };

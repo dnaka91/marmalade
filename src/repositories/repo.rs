@@ -92,7 +92,7 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
 
         let repo_git = DIRS.repo_git_dir(self.user, self.repo);
         let branches = tokio::task::spawn_blocking(move || -> Result<_> {
-            let repo = Repository::open(&repo_git).context("failed opening repo")?;
+            let repo = Repository::open(repo_git).context("failed opening repo")?;
             let branches = repo
                 .branches(Some(BranchType::Local))
                 .context("failed listing branches")?;

@@ -156,8 +156,8 @@ pub struct Create {
 #[instrument(skip_all, fields(?user.username, ?create.name))]
 pub async fn create_post(
     User(user): User,
-    Form(create): Form<Create>,
     mut cookies: Cookies,
+    Form(create): Form<Create>,
 ) -> impl IntoResponse {
     info!("got repo create request");
 
@@ -276,8 +276,8 @@ pub struct Settings {
 pub async fn settings_post(
     User(user): User,
     Path(path): Path<BasePath>,
-    Form(settings): Form<Settings>,
     mut cookies: Cookies,
+    Form(settings): Form<Settings>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got repo settings request");
 

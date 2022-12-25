@@ -12,19 +12,19 @@ use std::{
 
 use anyhow::Result;
 use axum::{
-    handler::Handler,
+    extract::FromRef,
     routing::{get, post},
-    Extension, Router, Server,
+    Router, Server,
 };
 use tokio::sync::Mutex;
 use tokio_shutdown::Shutdown;
 use tower::{util::AndThenLayer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{info, Level, Subscriber};
-use tracing_quiver::QuiverLayer;
+use tracing_archer::QuiverLayer;
 use tracing_subscriber::{filter::Targets, prelude::*, registry::LookupSpan, reload, Registry};
 
-use crate::{middleware::OnionLocationLayer, models::Quiver, repositories::SettingsRepository};
+use crate::{middleware::OnionLocationLayer, models::Archer, repositories::SettingsRepository};
 
 mod assets;
 mod cookies;
@@ -52,7 +52,7 @@ const ADDRESS: Ipv4Addr = if cfg!(debug_assertions) {
 async fn main() -> Result<()> {
     SettingsRepository::init().await?;
 
-    let toggle = init_logging(SettingsRepository::new().get_tracing_quiver().await).await?;
+    let toggle = init_logging(SettingsRepository::new().get_tracing_archer().await).await?;
 
     let addr = SocketAddr::from((ADDRESS, 8080));
     let shutdown = Shutdown::new()?;
@@ -104,16 +104,18 @@ async fn main() -> Result<()> {
                     get(handlers::auth::login).post(handlers::auth::login_post),
                 )
                 .route("/", get(handlers::index))
-                .fallback(handlers::handle_404.into_service())
+                .fallback(handlers::handle_404)
                 .layer(
                     ServiceBuilder::new()
                         .layer(TraceLayer::new_for_http())
                         .layer(CompressionLayer::new())
                         .layer(OnionLocationLayer::new())
-                        .layer(Extension(Arc::new(toggle)))
                         .layer(AndThenLayer::new(middleware::security_headers))
                         .into_inner(),
                 )
+                .with_state(AppState {
+                    toggle: Arc::new(toggle),
+                })
                 .into_make_service(),
         )
         .with_graceful_shutdown(shutdown.handle());
@@ -125,15 +127,26 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+#[derive(Clone)]
+pub struct AppState {
+    toggle: Arc<TracingToggle>,
+}
+
 pub struct TracingToggle {
     reload: reload::Handle<Option<QuiverLayer<Registry>>, Registry>,
-    handle: Mutex<Option<tracing_quiver::Handle>>,
+    handle: Mutex<Option<tracing_archer::Handle>>,
+}
+
+impl FromRef<AppState> for Arc<TracingToggle> {
+    fn from_ref(input: &AppState) -> Self {
+        Arc::clone(&input.toggle)
+    }
 }
 
 #[allow(clippy::missing_errors_doc)]
 impl TracingToggle {
-    pub async fn enable(&self, quiver: Quiver) -> Result<()> {
-        let (layer, handle) = init_tracing(quiver).await?;
+    pub async fn enable(&self, archer: Archer) -> Result<()> {
+        let (layer, handle) = init_tracing(archer).await?;
         self.reload.reload(Some(layer))?;
         if let Some(handle) = self.handle.lock().await.replace(handle) {
             handle.shutdown(Duration::from_secs(10)).await;
@@ -152,8 +165,8 @@ impl TracingToggle {
     }
 }
 
-async fn init_logging(quiver: Option<Quiver>) -> Result<TracingToggle> {
-    let (tracing, handle) = match quiver {
+async fn init_logging(archer: Option<Archer>) -> Result<TracingToggle> {
+    let (tracing, handle) = match archer {
         Some(settings) => {
             let (layer, handle) = init_tracing(settings).await?;
             (Some(layer), Some(handle))
@@ -179,11 +192,11 @@ async fn init_logging(quiver: Option<Quiver>) -> Result<TracingToggle> {
     })
 }
 
-async fn init_tracing<S>(settings: Quiver) -> Result<(QuiverLayer<S>, tracing_quiver::Handle)>
+async fn init_tracing<S>(settings: Archer) -> Result<(QuiverLayer<S>, tracing_archer::Handle)>
 where
     for<'span> S: Subscriber + LookupSpan<'span>,
 {
-    tracing_quiver::builder()
+    tracing_archer::builder()
         .with_server_addr(settings.address)
         .with_server_cert(settings.certificate)
         .with_resource(env!("CARGO_CRATE_NAME"), env!("CARGO_PKG_VERSION"))

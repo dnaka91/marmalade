@@ -2,8 +2,8 @@ use std::{borrow::Cow, convert::Infallible, fmt::Display};
 
 use axum::{
     async_trait,
-    extract::{FromRequest, RequestParts},
-    http::{header::COOKIE, HeaderMap},
+    extract::FromRequestParts,
+    http::{header::COOKIE, request::Parts, HeaderMap},
 };
 use rand::Rng;
 
@@ -66,16 +66,16 @@ impl Cookies {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for Cookies
+impl<S> FromRequestParts<S> for Cookies
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = Infallible;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let settings = SettingsRepository::new();
 
-        let jar = get_cookie_jar(req.headers());
+        let jar = get_cookie_jar(&parts.headers);
         let key = cookie::Key::from(&settings.get_key().await);
 
         Ok(Self { jar, key })

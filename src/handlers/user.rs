@@ -104,8 +104,8 @@ pub struct Settings {
 pub async fn settings_post(
     User(user): User,
     Path(path): Path<BasePath>,
-    Form(settings): Form<Settings>,
     mut cookies: Cookies,
+    Form(settings): Form<Settings>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got user settings request");
 
@@ -142,8 +142,8 @@ pub struct NewPassword {
 pub async fn password_post(
     User(user): User,
     Path(path): Path<BasePath>,
-    Form(pw): Form<NewPassword>,
     mut cookies: Cookies,
+    Form(pw): Form<NewPassword>,
 ) -> Result<impl IntoResponse, StatusTemplate> {
     info!("got user password request");
 

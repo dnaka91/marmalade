@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use askama::Template;
 
-use crate::models::{Quiver, UserAccount};
+use crate::models::{Archer, UserAccount};
 
 #[derive(Template)]
 #[template(path = "admin/settings.html")]
@@ -11,19 +11,19 @@ pub struct Settings {
     pub message: Option<ServerSettingsMessage>,
     pub auth_user: Option<UserAccount>,
     pub onion: String,
-    pub quiver: Option<Quiver>,
+    pub archer: Option<Archer>,
 }
 
 impl Settings {
-    fn quiver_address(&self) -> &str {
-        self.quiver
+    fn archer_address(&self) -> &str {
+        self.archer
             .as_ref()
             .map(|q| q.address.as_str())
             .unwrap_or_default()
     }
 
-    fn quiver_certificate(&self) -> &str {
-        self.quiver
+    fn archer_certificate(&self) -> &str {
+        self.archer
             .as_ref()
             .map(|q| q.certificate.as_str())
             .unwrap_or_default()

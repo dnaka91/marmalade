@@ -112,7 +112,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
             hasher.finish()
         };
         let path = entry.path().into_os_string().into_string().unwrap();
-        let name = format!("/{}", entry.file_name().into_string().unwrap());
+        let name = entry.file_name().into_string().unwrap();
         let etag = format!("W/\"{hash:016x}\"");
 
         contents.push(quote! { include_bytes!(#path) });

@@ -1,7 +1,7 @@
 use axum::{
     async_trait,
-    extract::{FromRequest, RequestParts, TypedHeader},
-    http::{header::WWW_AUTHENTICATE, StatusCode},
+    extract::{FromRequestParts, TypedHeader},
+    http::{header::WWW_AUTHENTICATE, request::Parts, StatusCode},
 };
 use headers::{authorization::Basic, Authorization, HeaderMap, HeaderValue};
 use uuid::Uuid;
@@ -33,14 +33,14 @@ impl BasicUser {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for BasicUser
+impl<S> FromRequestParts<S> for BasicUser
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = StatusTemplate;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let user = Cookies::from_request(req)
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let user = Cookies::from_request_parts(parts, state)
             .await
             .ok()
             .and_then(|cookies| Self::from_cookies(&cookies))
@@ -63,14 +63,14 @@ where
 pub struct User(pub UserAccount);
 
 #[async_trait]
-impl<B> FromRequest<B> for User
+impl<S> FromRequestParts<S> for User
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = StatusTemplate;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let user = BasicUser::from_request(req).await?;
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let user = BasicUser::from_request_parts(parts, state).await?;
         let repo = UserRepository::for_user(&user.username);
 
         repo.load_info()
@@ -85,15 +85,15 @@ pub struct BasicAuth {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for BasicAuth
+impl<S> FromRequestParts<S> for BasicAuth
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = (HeaderMap, StatusTemplate);
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization(auth)) =
-            <TypedHeader<Authorization<Basic>>>::from_request(req)
+            <TypedHeader<Authorization<Basic>>>::from_request_parts(parts, state)
                 .await
                 .map_err(|_| {
                     let mut headers = HeaderMap::with_capacity(1);

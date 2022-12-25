@@ -21,29 +21,15 @@ type AssetResponse = Result<(HeaderMap, &'static [u8]), (HeaderMap, StatusCode)>
 /// Max age setting for the `Cache-Control` header, currently set to **2 years**.
 const CACHE_MAX_AGE: Duration = Duration::from_secs(63_072_000);
 
-pub async fn favicon_32(
+pub async fn favicon_svg(
     if_modified_since: Option<TypedHeader<IfModifiedSince>>,
     if_none_match: Option<TypedHeader<IfNoneMatch>>,
-) -> AssetResponse {
-    info!("got assets favicon-32 request");
-    favicon(
-        &assets::FAVICON_X32_HASH,
-        assets::FAVICON_X32_CONTENT,
-        mime::IMAGE_PNG,
-        if_modified_since,
-        if_none_match,
-    )
-}
-
-pub async fn favicon_16(
-    if_modified_since: Option<TypedHeader<IfModifiedSince>>,
-    if_none_match: Option<TypedHeader<IfNoneMatch>>,
-) -> AssetResponse {
-    info!("got assets favicon-16 request");
-    favicon(
-        &assets::FAVICON_X16_HASH,
-        assets::FAVICON_X16_CONTENT,
-        mime::IMAGE_PNG,
+) -> impl IntoResponse {
+    info!("got assets favicon request");
+    asset_reply(
+        &assets::FAVICON_SVG_HASH,
+        assets::FAVICON_SVG_CONTENT,
+        mime::IMAGE_SVG,
         if_modified_since,
         if_none_match,
     )
@@ -54,7 +40,7 @@ pub async fn main_css(
     if_none_match: Option<TypedHeader<IfNoneMatch>>,
 ) -> impl IntoResponse {
     info!("got assets main-css request");
-    favicon(
+    asset_reply(
         &assets::MAIN_CSS_HASH,
         assets::MAIN_CSS_CONTENT,
         mime::TEXT_CSS,
@@ -67,7 +53,7 @@ pub async fn webfonts(
     Path(path): Path<String>,
     if_modified_since: Option<TypedHeader<IfModifiedSince>>,
     if_none_match: Option<TypedHeader<IfNoneMatch>>,
-) -> AssetResponse {
+) -> impl IntoResponse {
     info!("got assets webfonts request");
 
     let index = assets::WEBFONTS_NAME
@@ -75,7 +61,7 @@ pub async fn webfonts(
         .position(|&route| route == path)
         .ok_or_else(|| (HeaderMap::new(), StatusCode::NOT_FOUND))?;
 
-    favicon(
+    asset_reply(
         &assets::WEBFONTS_HASH[index],
         assets::WEBFONTS_CONTENT[index],
         mime::FONT_WOFF2,
@@ -84,7 +70,7 @@ pub async fn webfonts(
     )
 }
 
-fn favicon(
+fn asset_reply(
     etag: &ETag,
     content: &'static [u8],
     mime: Mime,

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 33.867 33.867">
+    <style>@media (prefers-color-scheme: dark) { :root { filter: invert(100%); } }</style>
+    <path d="m1.0583 1.0583h31.75v31.75h-31.75z" fill="#fff" stroke="#000" stroke-width="2.1167"/>
+    <g stroke-width=".26459">
+        <path d="m4.6665 29.634v-25.4h7.6755l4.6088 17.326 4.5568-17.326h7.6928v25.4h-4.7647v-19.994l-5.0419 19.994h-4.938l-5.0246-19.994v19.994z"/>
+    </g>
+</svg>

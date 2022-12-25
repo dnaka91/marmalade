@@ -80,8 +80,7 @@ async fn main() -> Result<()> {
                 .route("/:user", get(handlers::user::index))
                 .route(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
                 .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
-                .route(assets::FAVICON_X16_ROUTE, get(handlers::assets::favicon_16))
-                .route(assets::FAVICON_X32_ROUTE, get(handlers::assets::favicon_32))
+                .route(assets::FAVICON_SVG_ROUTE, get(handlers::assets::favicon_svg))
                 .route("/settings/dz", post(handlers::admin::settings_dz_post))
                 .route("/settings/tor", post(handlers::admin::settings_tor_post))
                 .route(

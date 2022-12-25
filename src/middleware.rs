@@ -28,10 +28,7 @@ pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<Box
     headers.append(
         CONTENT_SECURITY_POLICY,
         HeaderValue::from_static(
-            "default-src 'none'; \
-            font-src 'self'; \
-            img-src 'self'; \
-            style-src 'self';",
+            "default-src 'none'; font-src 'self'; img-src 'self'; style-src 'self';",
         ),
     );
     headers.append(REFERRER_POLICY, "same-origin".parse().unwrap());
@@ -58,9 +55,9 @@ where
     ReqBody: Send + 'static,
     ResBody: Send + 'static,
 {
-    type Response = S::Response;
     type Error = S::Error;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Response = S::Response;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)

@@ -72,7 +72,7 @@ pub struct Tree {
     pub user: String,
     #[serde(deserialize_with = "crate::de::repo_name")]
     pub repo: String,
-    pub path: String,
+    pub path: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -93,7 +93,7 @@ pub async fn tree(
     if repo_repo.exists().await && repo_repo.visible(&user.username, &tree.user).await.unwrap() {
         let branches = repo_repo.list_branches().await.unwrap();
         let repo_tree = {
-            let path = (tree.path != "/").then(|| Utf8Path::new(&tree.path[1..]));
+            let path = tree.path.as_ref().map(Utf8Path::new);
             let tree = repo_repo.get_tree_list(&query.branch, path).await.unwrap();
             let mut tree = tree.ok_or(StatusTemplate(StatusCode::NOT_FOUND))?;
 
@@ -122,7 +122,7 @@ pub async fn tree(
             repo: tree.repo,
             branch: query.branch,
             branches,
-            path: Utf8PathBuf::from(tree.path[1..].to_owned()),
+            path: tree.path.map(Utf8PathBuf::from).unwrap_or_default(),
             tree: repo_tree,
         })
     } else {

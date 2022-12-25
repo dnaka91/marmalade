@@ -62,6 +62,7 @@ async fn main() -> Result<()> {
             Router::new()
                 .route("/:user/:repo/:service", post(handlers::git::pack))
                 .route("/:user/:repo/info/refs", get(handlers::git::info_refs))
+                .route("/:user/:repo/tree/", get(handlers::repo::tree))
                 .route("/:user/:repo/tree/*path", get(handlers::repo::tree))
                 .route(
                     "/:user/:repo/delete",

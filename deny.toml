@@ -1,7 +1,6 @@
 [advisories]
 ignore = [
     "RUSTSEC-2021-0136",
-    "RUSTSEC-2022-0048",
 ]
 
 [licenses]
@@ -25,10 +24,10 @@ license-files = [
 skip = [
     { name = "base64", version = "=0.13.1" },
     { name = "wasi", version = "=0.10.2" },
+    { name = "windows-sys", version = "=0.42.0" },
 ]
 
 [sources]
 allow-git = [
-    "https://github.com/djc/askama.git",
     "https://github.com/dnaka91/archer.git",
 ]

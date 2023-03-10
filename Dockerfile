@@ -1,9 +1,11 @@
-FROM rust:1.65 as builder
+FROM rust:1.68 as builder
 
 WORKDIR /volume
 
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends musl-tools=1.2.2-1 && \
+    apt-get install -y --no-install-recommends musl-tools && \
     rustup target add x86_64-unknown-linux-musl && \
     cargo init --bin
 
@@ -17,9 +19,9 @@ COPY templates/ templates/
 
 RUN touch src/main.rs && cargo build --release --target x86_64-unknown-linux-musl
 
-FROM alpine:3.16
+FROM alpine:3.17
 
-RUN apk add --no-cache git=~2.36 && \
+RUN apk add --no-cache git && \
     addgroup -g 1000 marmalade && \
     adduser -u 1000 -G marmalade -D -g '' -H -h /dev/null -s /sbin/nologin marmalade
 

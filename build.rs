@@ -6,10 +6,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use indoc::formatdoc;
 use proc_macro2::TokenStream;
 use quote::quote;
-use sass_rs::{Options, OutputStyle};
 use syntect::{highlighting::ThemeSet, html::ClassStyle};
 
 fn main() {
@@ -46,28 +44,28 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
     )
     .unwrap();
 
-    let sass = formatdoc! {r#"
+    let scss = format!(
+        r#"
         @charset "utf-8";
-
         $fa-font-path: "{webfonts_route}";
         $fc-font-path: "{webfonts_route}";
         @import "assets/main.sass";
-
-        /*!
-         * Syntect themes
-         */
-        {highlight}
         "#
-    };
+    );
 
-    let css = sass_rs::compile_string(
-        &sass,
-        Options {
-            output_style: OutputStyle::Compressed,
-            precision: 5,
-            indented_syntax: false,
-            include_paths: vec![root.to_owned()],
-        },
+    let css = grass::from_string(
+        scss,
+        &grass::Options::default()
+            .input_syntax(grass::InputSyntax::Scss)
+            .style(grass::OutputStyle::Compressed)
+            .load_path(root),
+    )
+    .unwrap();
+    let css = grass::from_string(
+        format!("{css}\n{highlight}"),
+        &grass::Options::default()
+            .input_syntax(grass::InputSyntax::Css)
+            .style(grass::OutputStyle::Compressed),
     )
     .unwrap();
 

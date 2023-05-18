@@ -1,4 +1,4 @@
-FROM rust:1.68 as builder
+FROM rust:1.69 as builder
 
 WORKDIR /volume
 
@@ -19,7 +19,7 @@ COPY templates/ templates/
 
 RUN touch src/main.rs && cargo build --release --target x86_64-unknown-linux-musl
 
-FROM alpine:3.17
+FROM alpine:3
 
 RUN apk add --no-cache git && \
     addgroup -g 1000 marmalade && \

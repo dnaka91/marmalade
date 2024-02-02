@@ -1,9 +1,12 @@
 use axum::{
     async_trait,
-    extract::{FromRequestParts, TypedHeader},
+    extract::FromRequestParts,
     http::{header::WWW_AUTHENTICATE, request::Parts, StatusCode},
 };
-use headers::{authorization::Basic, Authorization, HeaderMap, HeaderValue};
+use axum_extra::{
+    headers::{authorization::Basic, Authorization, HeaderMap, HeaderValue},
+    TypedHeader,
+};
 use uuid::Uuid;
 
 use crate::{

@@ -21,7 +21,7 @@ fn main() {
     let favicons = render_favicons(&root);
 
     let syntax = quote! {
-        use headers::ETag;
+        use axum_extra::headers::ETag;
         use once_cell::sync::Lazy;
 
         #main_css

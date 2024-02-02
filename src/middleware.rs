@@ -7,14 +7,14 @@ use std::{
 };
 
 use axum::{
-    body::BoxBody,
     http::{
         header::{
             CONTENT_SECURITY_POLICY, REFERRER_POLICY, STRICT_TRANSPORT_SECURITY,
             X_CONTENT_TYPE_OPTIONS, X_FRAME_OPTIONS, X_XSS_PROTECTION,
         },
-        HeaderValue, Request, Response,
+        HeaderValue, Request,
     },
+    response::Response,
 };
 use futures_util::future::BoxFuture;
 use tower::{Layer, Service};
@@ -22,7 +22,7 @@ use tracing::error;
 
 use crate::repositories::SettingsRepository;
 
-pub async fn security_headers(mut res: Response<BoxBody>) -> Result<Response<BoxBody>, Infallible> {
+pub async fn security_headers(mut res: Response) -> Result<Response, Infallible> {
     let headers = res.headers_mut();
 
     headers.append(

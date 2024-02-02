@@ -98,7 +98,7 @@ fn get_cookie_jar(map: &HeaderMap) -> cookie::CookieJar {
         };
 
         for part in cookie.split(';').map(str::trim) {
-            if let Ok(cookie) = part.parse() {
+            if let Ok(cookie) = part.parse::<cookie::Cookie<'static>>() {
                 jar.add_original(cookie);
             }
         }

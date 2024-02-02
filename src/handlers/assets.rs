@@ -2,14 +2,13 @@
 
 use std::time::{Duration, SystemTime};
 
-use axum::{
-    extract::{Path, TypedHeader},
-    http::StatusCode,
-    response::IntoResponse,
-};
-use headers::{
-    CacheControl, ContentType, ETag, HeaderMap, HeaderMapExt, IfModifiedSince, IfNoneMatch,
-    LastModified,
+use axum::{extract::Path, http::StatusCode, response::IntoResponse};
+use axum_extra::{
+    headers::{
+        CacheControl, ContentType, ETag, HeaderMap, HeaderMapExt, IfModifiedSince, IfNoneMatch,
+        LastModified,
+    },
+    TypedHeader,
 };
 use mime::Mime;
 use tracing::info;

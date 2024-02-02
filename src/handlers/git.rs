@@ -5,9 +5,9 @@ use std::{
 
 use anyhow::Result;
 use axum::{
-    body::{Full, StreamBody},
-    extract::{BodyStream, Path, Query},
-    http::{Response, StatusCode},
+    body::Body,
+    extract::{Path, Query},
+    http::StatusCode,
     response::IntoResponse,
 };
 use camino::Utf8Path;
@@ -102,11 +102,13 @@ pub async fn info_refs(
     body.extend(header.as_bytes());
     body.extend(output.stdout);
 
-    Ok(Response::builder()
-        .header("Content-Type", query.service.content_type(true))
-        .header("Cache-Control", "no-cache")
-        .body(Full::from(body))
-        .unwrap())
+    Ok((
+        [
+            ("Content-Type", query.service.content_type(true)),
+            ("Cache-Control", "no-cache"),
+        ],
+        body,
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -120,7 +122,7 @@ pub struct PackParams {
 pub async fn pack(
     auth: BasicAuth,
     Path(params): Path<PackParams>,
-    body: BodyStream,
+    body: Body,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!(
         auth_user = ?auth.username,
@@ -152,7 +154,9 @@ pub async fn pack(
     let stdout = process.stdout.take().unwrap();
 
     tokio::spawn(async move {
-        let body = body.map_err(|e| IoError::new(ErrorKind::Other, e));
+        let body = body
+            .into_data_stream()
+            .map_err(|e| IoError::new(ErrorKind::Other, e));
         let mut body = StreamReader::new(body);
 
         if let Err(error) = tokio::io::copy(&mut body, &mut stdin).await {
@@ -169,13 +173,15 @@ pub async fn pack(
         }
     });
 
-    let body = StreamBody::new(ReaderStream::new(stdout));
+    let body = Body::from_stream(ReaderStream::new(stdout));
 
-    Ok(Response::builder()
-        .header("Content-Type", params.service.content_type(false))
-        .header("Cache-Control", "no-cache")
-        .body(body)
-        .unwrap())
+    Ok((
+        [
+            ("Content-Type", params.service.content_type(false)),
+            ("Cache-Control", "no-cache"),
+        ],
+        body,
+    ))
 }
 
 fn adjust_head(path: &Utf8Path) -> Result<()> {

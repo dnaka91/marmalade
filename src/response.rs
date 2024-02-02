@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 
 use axum::{
-    body::BoxBody,
     http::{header::SET_COOKIE, StatusCode},
     response::{IntoResponse, Response},
 };
@@ -41,7 +40,7 @@ impl<T> IntoResponse for SetCookies<T>
 where
     T: IntoResponse,
 {
-    fn into_response(self) -> Response<BoxBody> {
+    fn into_response(self) -> Response {
         let mut res = self.inner.into_response();
         let headers = res.headers_mut();
 

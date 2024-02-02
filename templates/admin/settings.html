@@ -24,37 +24,6 @@
     {% endif %}
 
     <div class="box">
-      <h4 class="title is-4">Tracing</h4>
-
-      <form method="POST" action="/settings/tracing">
-
-        <div class="field">
-          <label class="label" for="name">Archer address</label>
-          <div class="control">
-            <input class="input" id="archer_address" name="address" value="{{ self.archer_address() }}">
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label" for="description">Archer certificate</label>
-          <div class="control">
-            <textarea class="textarea" id="archer_certificate" name="certificate" rows="8">
-              {{- self.archer_certificate() -}}
-            </textarea>
-          </div>
-        </div>
-
-        <button class="button is-primary">
-          <span class="icon">
-            <i class="fas fa-save"></i>
-          </span>
-          <span>Save</span>
-        </button>
-
-      </form>
-    </div>
-
-    <div class="box">
       <h4 class="title is-4">Tor</h4>
 
       <form method="POST" action="/settings/tor">

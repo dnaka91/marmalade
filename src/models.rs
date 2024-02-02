@@ -24,15 +24,7 @@ pub struct Tor {
 }
 
 #[derive(Default, Serialize, Deserialize)]
-pub struct Tracing {
-    pub archer: Option<Archer>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Archer {
-    pub address: String,
-    pub certificate: String,
-}
+pub struct Tracing {}
 
 #[derive(Serialize, Deserialize)]
 pub struct UserAccount {

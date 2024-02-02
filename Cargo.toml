@@ -31,7 +31,6 @@ tokio-util = { version = "0.7.10", features = ["io"] }
 tower = "0.4.13"
 tower-http = { version = "0.5.1", features = ["compression-gzip", "decompression-gzip", "trace", "util"] }
 tracing = "0.1.40"
-tracing-archer = { git = "https://github.com/dnaka91/archer.git" }
 tracing-subscriber = "0.3.18"
 unidirs = "0.1.1"
 uuid = { version = "1.7.0", features = ["serde", "v4"] }

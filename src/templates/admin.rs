@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use askama::Template;
 
-use crate::models::{Archer, UserAccount};
+use crate::models::UserAccount;
 
 #[derive(Template)]
 #[template(path = "admin/settings.html")]
@@ -11,23 +11,6 @@ pub struct Settings {
     pub message: Option<ServerSettingsMessage>,
     pub auth_user: Option<UserAccount>,
     pub onion: String,
-    pub archer: Option<Archer>,
-}
-
-impl Settings {
-    fn archer_address(&self) -> &str {
-        self.archer
-            .as_ref()
-            .map(|q| q.address.as_str())
-            .unwrap_or_default()
-    }
-
-    fn archer_certificate(&self) -> &str {
-        self.archer
-            .as_ref()
-            .map(|q| q.certificate.as_str())
-            .unwrap_or_default()
-    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

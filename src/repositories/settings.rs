@@ -7,7 +7,7 @@ use tokio::{fs, sync::RwLock};
 use crate::{
     cookies,
     dirs::DIRS,
-    models::{Archer, Settings, Tor, Tracing},
+    models::{Settings, Tor},
 };
 
 static STATE: Lazy<RwLock<Settings>> = Lazy::new(|| RwLock::new(Settings::default()));
@@ -47,24 +47,6 @@ impl SettingsRepository {
 
     pub async fn get_tor_onion(&self) -> Option<String> {
         STATE.read().await.tor.as_ref().map(|t| t.onion.clone())
-    }
-
-    pub async fn get_tracing_archer(&self) -> Option<Archer> {
-        STATE
-            .read()
-            .await
-            .tracing
-            .as_ref()
-            .and_then(|t| t.archer.clone())
-    }
-
-    pub async fn set_tracing_archer(&self, archer: Option<Archer>) -> Result<()> {
-        let mut settings = STATE.write().await;
-        let tracing = settings.tracing.get_or_insert(Tracing::default());
-
-        tracing.archer = archer;
-
-        save(&settings).await
     }
 
     #[allow(clippy::option_if_let_else)]

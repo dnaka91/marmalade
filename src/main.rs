@@ -1,30 +1,25 @@
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, clippy::all, clippy::pedantic)]
 #![allow(clippy::manual_let_else, clippy::module_name_repetitions)]
-#![recursion_limit = "256"]
 
 use std::{
     env,
     net::{Ipv4Addr, SocketAddr},
-    sync::Arc,
-    time::Duration,
 };
 
 use anyhow::Result;
 use axum::{
-    extract::FromRef,
     routing::{get, post},
     Router,
 };
-use tokio::{net::TcpListener, sync::Mutex};
+use tokio::net::TcpListener;
 use tokio_shutdown::Shutdown;
 use tower::{util::AndThenLayer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
-use tracing::{info, Level, Subscriber};
-use tracing_archer::QuiverLayer;
-use tracing_subscriber::{filter::Targets, prelude::*, registry::LookupSpan, reload, Registry};
+use tracing::{info, Level};
+use tracing_subscriber::{filter::Targets, prelude::*};
 
-use crate::{middleware::OnionLocationLayer, models::Archer, repositories::SettingsRepository};
+use crate::{middleware::OnionLocationLayer, repositories::SettingsRepository};
 
 mod assets;
 mod cookies;
@@ -52,7 +47,7 @@ const ADDRESS: Ipv4Addr = if cfg!(debug_assertions) {
 async fn main() -> Result<()> {
     SettingsRepository::init().await?;
 
-    let toggle = init_logging(SettingsRepository::new().get_tracing_archer().await).await?;
+    init_logging();
 
     let addr = SocketAddr::from((ADDRESS, 8080));
     let shutdown = Shutdown::new()?;
@@ -88,10 +83,6 @@ async fn main() -> Result<()> {
             )
             .route("/settings/dz", post(handlers::admin::settings_dz_post))
             .route("/settings/tor", post(handlers::admin::settings_tor_post))
-            .route(
-                "/settings/tracing",
-                post(handlers::admin::settings_tracing_post),
-            )
             .route("/settings", get(handlers::admin::settings))
             .route("/users", get(handlers::user::list))
             .route(
@@ -117,9 +108,7 @@ async fn main() -> Result<()> {
                     .layer(AndThenLayer::new(middleware::security_headers))
                     .into_inner(),
             )
-            .with_state(AppState {
-                toggle: Arc::new(toggle),
-            })
+            .with_state(AppState {})
             .into_make_service(),
     )
     .with_graceful_shutdown(shutdown.handle());
@@ -132,55 +121,10 @@ async fn main() -> Result<()> {
 }
 
 #[derive(Clone)]
-pub struct AppState {
-    toggle: Arc<TracingToggle>,
-}
+pub struct AppState {}
 
-pub struct TracingToggle {
-    reload: reload::Handle<Option<QuiverLayer<Registry>>, Registry>,
-    handle: Mutex<Option<tracing_archer::Handle>>,
-}
-
-impl FromRef<AppState> for Arc<TracingToggle> {
-    fn from_ref(input: &AppState) -> Self {
-        Arc::clone(&input.toggle)
-    }
-}
-
-#[allow(clippy::missing_errors_doc)]
-impl TracingToggle {
-    pub async fn enable(&self, archer: Archer) -> Result<()> {
-        let (layer, handle) = init_tracing(archer).await?;
-        self.reload.reload(Some(layer))?;
-        if let Some(handle) = self.handle.lock().await.replace(handle) {
-            handle.shutdown(Duration::from_secs(10)).await;
-        }
-
-        Ok(())
-    }
-
-    pub async fn disable(&self) -> Result<()> {
-        self.reload.reload(None)?;
-        if let Some(handle) = self.handle.lock().await.take() {
-            handle.shutdown(Duration::from_secs(10)).await;
-        }
-
-        Ok(())
-    }
-}
-
-async fn init_logging(archer: Option<Archer>) -> Result<TracingToggle> {
-    let (tracing, handle) = match archer {
-        Some(settings) => {
-            let (layer, handle) = init_tracing(settings).await?;
-            (Some(layer), Some(handle))
-        }
-        None => (None, None),
-    };
-    let (tracing, reload) = reload::Layer::new(tracing);
-
+fn init_logging() {
     tracing_subscriber::registry()
-        .with(tracing)
         .with(tracing_subscriber::fmt::layer())
         .with(
             Targets::new()
@@ -189,22 +133,4 @@ async fn init_logging(archer: Option<Archer>) -> Result<TracingToggle> {
                 .with_default(Level::INFO),
         )
         .init();
-
-    Ok(TracingToggle {
-        reload,
-        handle: Mutex::new(handle),
-    })
-}
-
-async fn init_tracing<S>(settings: Archer) -> Result<(QuiverLayer<S>, tracing_archer::Handle)>
-where
-    for<'span> S: Subscriber + LookupSpan<'span>,
-{
-    tracing_archer::builder()
-        .with_server_addr(settings.address)
-        .with_server_cert(settings.certificate)
-        .with_resource(env!("CARGO_CRATE_NAME"), env!("CARGO_PKG_VERSION"))
-        .build()
-        .await
-        .map_err(Into::into)
 }

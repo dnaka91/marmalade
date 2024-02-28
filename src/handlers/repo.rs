@@ -5,7 +5,7 @@ use axum::{
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use once_cell::sync::Lazy;
-use pulldown_cmark::{CodeBlockKind, Event, Tag};
+use pulldown_cmark::{CodeBlockKind, Event, Tag, TagEnd};
 use serde::Deserialize;
 use syntect::{
     html::{ClassStyle, ClassedHTMLGenerator},
@@ -349,9 +349,9 @@ fn render_markdown(text: &str) -> String {
                         Event::Text(text)
                     }
                 }
-                Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+                Event::End(TagEnd::CodeBlock) => {
                     syntax = None;
-                    Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(lang)))
+                    Event::End(TagEnd::CodeBlock)
                 }
                 Event::Html(html) => Event::Text(html),
                 event => event,

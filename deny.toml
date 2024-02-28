@@ -1,6 +1,16 @@
+[advisories]
+version = 2
+ignore = ["RUSTSEC-2023-0081"]
+
 [licenses]
-allow = ["MPL-2.0"]
-allow-osi-fsf-free = "both"
+version = 2
+allow = [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "MIT",
+    "MPL-2.0",
+]
 exceptions = [
     { allow = ["AGPL-3.0"], name = "marmalade" },
     { allow = ["Unicode-DFS-2016"], name = "unicode-ident" },
@@ -9,8 +19,8 @@ exceptions = [
 [bans]
 skip = [
     { name = "bitflags", version = "1" },
-    { name = "hashbrown", version = "0.11" },
-    { name = "hashbrown", version = "0.12" },
-    { name = "indexmap", version = "1" },
-    { name = "syn", version = "1" },
+    { name = "hashbrown", version = "0.13" },
+]
+skip-tree = [
+    { name = "windows-sys", version = "0.48", depth = 3 },
 ]

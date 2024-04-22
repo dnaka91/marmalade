@@ -188,17 +188,9 @@ impl<'a, 'b> RepoRepository<'a, 'b> {
                 None => return Ok(None),
             };
             let entry = tree.iter().find(|entry| {
-                entry
-                    .name()
-                    .map(|name| {
-                        name.eq_ignore_ascii_case("README.md")
-                            || name.eq_ignore_ascii_case("README")
-                    })
-                    .unwrap_or_default()
-                    && entry
-                        .kind()
-                        .map(|kind| kind == ObjectType::Blob)
-                        .unwrap_or_default()
+                entry.name().is_some_and(|name| {
+                    name.eq_ignore_ascii_case("README.md") || name.eq_ignore_ascii_case("README")
+                }) && entry.kind().is_some_and(|kind| kind == ObjectType::Blob)
             });
 
             let content = match entry {

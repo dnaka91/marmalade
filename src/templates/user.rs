@@ -17,8 +17,7 @@ impl Index {
     fn auth_same_user(&self) -> bool {
         self.auth_user
             .as_ref()
-            .map(|u| u.username == self.user)
-            .unwrap_or_default()
+            .is_some_and(|u| u.username == self.user)
     }
 }
 

@@ -1,6 +1,6 @@
 [advisories]
 version = 2
-ignore = ["RUSTSEC-2023-0081"]
+ignore = ["RUSTSEC-2024-0320"]
 
 [licenses]
 version = 2
@@ -18,8 +18,10 @@ exceptions = [
 
 [bans]
 skip = [
+    { name = "base64", version = "0.21" },
     { name = "bitflags", version = "1" },
     { name = "hashbrown", version = "0.13" },
+    { name = "sync_wrapper", version = "0.1" },
 ]
 skip-tree = [
     { name = "windows-sys", version = "0.48", depth = 3 },

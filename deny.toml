@@ -20,9 +20,10 @@ exceptions = [
 skip = [
     { name = "base64", version = "0.21" },
     { name = "bitflags", version = "1" },
-    { name = "hashbrown", version = "0.13" },
+    { name = "hashbrown", version = "0.14" },
     { name = "sync_wrapper", version = "0.1" },
 ]
 skip-tree = [
     { name = "windows-sys", version = "0.48", depth = 3 },
+    { name = "windows-sys", version = "0.52", depth = 3 },
 ]

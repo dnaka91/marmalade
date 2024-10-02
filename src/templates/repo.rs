@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use askama::Template;
 use camino::Utf8PathBuf;
+use rinja::Template;
 
 use crate::models::{FileKind, RepoFile, RepoTree, TreeKind, UserAccount, UserRepo};
 

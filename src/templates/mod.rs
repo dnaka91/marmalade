@@ -3,8 +3,8 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use askama::Template;
 use axum::http::StatusCode;
+use rinja::Template;
 
 use crate::models::UserAccount;
 

@@ -1,10 +1,11 @@
+use std::sync::LazyLock;
+
 use axum::{
     extract::{Form, Path, Query},
     http::StatusCode,
     response::IntoResponse,
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Event, Tag, TagEnd};
 use serde::Deserialize;
 use syntect::{
@@ -312,7 +313,7 @@ pub async fn settings_post(
     ))
 }
 
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
+static SYNTAX_SET: LazyLock<SyntaxSet> = LazyLock::new(|| {
     let mut builder = SyntaxSet::load_defaults_newlines().into_builder();
     builder.add(
         SyntaxDefinition::load_from_str(

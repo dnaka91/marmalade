@@ -21,8 +21,8 @@ fn main() {
     let favicons = render_favicons(&root);
 
     let syntax = quote! {
+        use std::sync::LazyLock;
         use axum_extra::headers::ETag;
-        use once_cell::sync::Lazy;
 
         #main_css
         #webfonts
@@ -82,7 +82,7 @@ fn render_main_css(root: &str, out: &Path, webfonts_route: String) -> TokenStrea
     quote! {
         pub const MAIN_CSS_ROUTE: &str = #route;
         pub static MAIN_CSS_CONTENT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/main.css"));
-        pub static MAIN_CSS_HASH: Lazy<ETag> = Lazy::new(|| #etag.parse().unwrap());
+        pub static MAIN_CSS_HASH: LazyLock<ETag> = LazyLock::new(|| #etag.parse().unwrap());
     }
 }
 
@@ -126,7 +126,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
         pub const WEBFONTS_ROUTE: &str = #route;
         pub static WEBFONTS_CONTENT: &[&[u8]] = &[#(#contents),*];
         pub static WEBFONTS_NAME: &[&str] = &[#(#names),*];
-        pub static WEBFONTS_HASH: Lazy<Vec<ETag>> = Lazy::new(|| {
+        pub static WEBFONTS_HASH: LazyLock<Vec<ETag>> = LazyLock::new(|| {
             [#(#hashes),*].iter().map(|&hash| hash.parse().unwrap()).collect()
         });
     };
@@ -148,6 +148,6 @@ fn render_favicons(root: &str) -> TokenStream {
     quote! {
         pub const FAVICON_SVG_ROUTE: &str = #route;
         pub static FAVICON_SVG_CONTENT: &[u8] = include_bytes!(#path);
-        pub static FAVICON_SVG_HASH: Lazy<ETag> = Lazy::new(|| #etag.parse().unwrap());
+        pub static FAVICON_SVG_HASH: LazyLock<ETag> = LazyLock::new(|| #etag.parse().unwrap());
     }
 }

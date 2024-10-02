@@ -1,7 +1,6 @@
-use std::{io::ErrorKind, mem};
+use std::{io::ErrorKind, mem, sync::LazyLock};
 
 use anyhow::{Context, Result};
-use once_cell::sync::Lazy;
 use tokio::{fs, sync::RwLock};
 
 use crate::{
@@ -10,7 +9,7 @@ use crate::{
     models::{Settings, Tor},
 };
 
-static STATE: Lazy<RwLock<Settings>> = Lazy::new(|| RwLock::new(Settings::default()));
+static STATE: LazyLock<RwLock<Settings>> = LazyLock::new(|| RwLock::new(Settings::default()));
 
 pub struct SettingsRepository {
     _priv: (),

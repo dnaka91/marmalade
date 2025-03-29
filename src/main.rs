@@ -9,14 +9,14 @@ use std::{
 
 use anyhow::Result;
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
 use tokio::net::TcpListener;
 use tokio_shutdown::Shutdown;
-use tower::{util::AndThenLayer, ServiceBuilder};
+use tower::{ServiceBuilder, util::AndThenLayer};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
 use crate::{middleware::OnionLocationLayer, repositories::SettingsRepository};
@@ -56,25 +56,25 @@ async fn main() -> Result<()> {
     let server = axum::serve(
         listener,
         Router::new()
-            .route("/:user/:repo/:service", post(handlers::git::pack))
-            .route("/:user/:repo/info/refs", get(handlers::git::info_refs))
-            .route("/:user/:repo/tree/", get(handlers::repo::tree))
-            .route("/:user/:repo/tree/*path", get(handlers::repo::tree))
+            .route("/{user}/{repo}/{service}", post(handlers::git::pack))
+            .route("/{user}/{repo}/info/refs", get(handlers::git::info_refs))
+            .route("/{user}/{repo}/tree/", get(handlers::repo::tree))
+            .route("/{user}/{repo}/tree/{*path}", get(handlers::repo::tree))
             .route(
-                "/:user/:repo/delete",
+                "/{user}/{repo}/delete",
                 get(handlers::repo::delete).post(handlers::repo::delete_post),
             )
             .route(
-                "/:user/:repo/settings",
+                "/{user}/{repo}/settings",
                 get(handlers::repo::settings).post(handlers::repo::settings_post),
             )
-            .route("/:user/:repo", get(handlers::repo::index))
-            .route("/:user/password", post(handlers::user::password_post))
+            .route("/{user}/{repo}", get(handlers::repo::index))
+            .route("/{user}/password", post(handlers::user::password_post))
             .route(
-                "/:user/settings",
+                "/{user}/settings",
                 get(handlers::user::settings).post(handlers::user::settings_post),
             )
-            .route("/:user", get(handlers::user::index))
+            .route("/{user}", get(handlers::user::index))
             .route(assets::WEBFONTS_ROUTE, get(handlers::assets::webfonts))
             .route(assets::MAIN_CSS_ROUTE, get(handlers::assets::main_css))
             .route(

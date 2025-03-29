@@ -367,7 +367,7 @@ fn render_markdown(text: &str) -> String {
 
 #[instrument(skip_all)]
 fn highlight_code(text: &str, syntax: &SyntaxReference) -> Result<String, syntect::Error> {
-    let mut gen = ClassedHTMLGenerator::new_with_class_style(
+    let mut generator = ClassedHTMLGenerator::new_with_class_style(
         syntax,
         &SYNTAX_SET,
         ClassStyle::SpacedPrefixed {
@@ -376,8 +376,8 @@ fn highlight_code(text: &str, syntax: &SyntaxReference) -> Result<String, syntec
     );
 
     for line in LinesWithEndings::from(text) {
-        gen.parse_html_for_line_which_includes_newline(line)?;
+        generator.parse_html_for_line_which_includes_newline(line)?;
     }
 
-    Ok(gen.finalize())
+    Ok(generator.finalize())
 }

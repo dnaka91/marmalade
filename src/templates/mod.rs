@@ -3,8 +3,9 @@
 use std::str::FromStr;
 
 use anyhow::bail;
+use askama::Template;
+use askama_web::WebTemplate;
 use axum::http::StatusCode;
-use rinja::Template;
 
 use crate::models::UserAccount;
 
@@ -12,13 +13,13 @@ pub mod admin;
 pub mod repo;
 pub mod user;
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "index.html")]
 pub struct Index {
     pub auth_user: Option<UserAccount>,
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "login.html")]
 pub struct Login {
     pub error: Option<LoginError>,
@@ -51,7 +52,7 @@ impl FromStr for LoginError {
     }
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "register.html")]
 pub struct Register {
     pub error: Option<RegisterError>,
@@ -87,7 +88,7 @@ impl FromStr for RegisterError {
     }
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "error.html")]
 pub struct Error {
     pub code: StatusCode,

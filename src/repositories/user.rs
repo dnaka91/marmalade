@@ -2,8 +2,8 @@ use std::{collections::HashSet, convert::TryFrom, io::ErrorKind};
 
 use anyhow::Result;
 use argon2::{
-    password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+    password_hash::{SaltString, rand_core::OsRng},
 };
 use camino::Utf8PathBuf;
 use tokio::fs;

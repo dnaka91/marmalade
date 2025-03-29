@@ -4,11 +4,11 @@ use std::time::{Duration, SystemTime};
 
 use axum::{extract::Path, http::StatusCode, response::IntoResponse};
 use axum_extra::{
+    TypedHeader,
     headers::{
         CacheControl, ContentType, ETag, HeaderMap, HeaderMapExt, IfModifiedSince, IfNoneMatch,
         LastModified,
     },
-    TypedHeader,
 };
 use mime::Mime;
 use tracing::info;

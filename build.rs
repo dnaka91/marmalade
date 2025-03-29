@@ -120,7 +120,7 @@ fn render_webfonts(root: &str) -> (TokenStream, String) {
     }
 
     let base_route = format!("/webfonts-{:016x}", folder_hash.finish());
-    let route = format!("{base_route}/*path");
+    let route = format!("{base_route}/{{*path}}");
 
     let syntax = quote! {
         pub const WEBFONTS_ROUTE: &str = #route;

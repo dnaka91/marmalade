@@ -8,11 +8,11 @@ use std::{
 
 use axum::{
     http::{
+        HeaderValue, Request,
         header::{
             CONTENT_SECURITY_POLICY, REFERRER_POLICY, STRICT_TRANSPORT_SECURITY,
             X_CONTENT_TYPE_OPTIONS, X_FRAME_OPTIONS, X_XSS_PROTECTION,
         },
-        HeaderValue, Request,
     },
     response::Response,
 };

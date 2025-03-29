@@ -22,7 +22,7 @@ pub mod hex {
 
     struct HexVisitor;
 
-    impl<'de> Visitor<'de> for HexVisitor {
+    impl Visitor<'_> for HexVisitor {
         type Value = [u8; 64];
 
         fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -47,7 +47,7 @@ pub mod hex {
     #[cfg(test)]
     mod tests {
         use serde::{Deserialize, Serialize};
-        use serde_test::{assert_de_tokens_error, assert_tokens, Token};
+        use serde_test::{Token, assert_de_tokens_error, assert_tokens};
 
         #[derive(Debug, PartialEq, Serialize, Deserialize)]
         struct Test {

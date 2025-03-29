@@ -1,11 +1,9 @@
 use std::{borrow::Cow, convert::Infallible, fmt::Display};
 
 use axum::{
-    async_trait,
     extract::FromRequestParts,
-    http::{header::COOKIE, request::Parts, HeaderMap},
+    http::{HeaderMap, header::COOKIE, request::Parts},
 };
-use rand::Rng;
 
 use crate::repositories::SettingsRepository;
 
@@ -65,7 +63,6 @@ impl Cookies {
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for Cookies
 where
     S: Send + Sync,
@@ -84,7 +81,7 @@ where
 
 pub fn generate_key() -> [u8; 64] {
     let mut key = [0; 64];
-    rand::thread_rng().fill(&mut key);
+    rand::fill(&mut key);
     key
 }
 

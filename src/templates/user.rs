@@ -1,11 +1,12 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use rinja::Template;
+use askama::Template;
+use askama_web::WebTemplate;
 
 use crate::models::UserAccount;
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "user/index.html")]
 pub struct Index {
     pub auth_user: Option<UserAccount>,
@@ -21,14 +22,14 @@ impl Index {
     }
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "user/list.html")]
 pub struct List {
     pub auth_user: Option<UserAccount>,
     pub users: Vec<String>,
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "user/settings.html")]
 pub struct Settings {
     pub message: Option<UserSettingsMessage>,

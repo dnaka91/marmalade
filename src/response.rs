@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use axum::{
-    http::{header::SET_COOKIE, StatusCode},
+    http::{StatusCode, header::SET_COOKIE},
     response::{IntoResponse, Response},
 };
 

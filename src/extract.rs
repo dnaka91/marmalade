@@ -1,11 +1,10 @@
 use axum::{
-    async_trait,
     extract::FromRequestParts,
-    http::{header::WWW_AUTHENTICATE, request::Parts, StatusCode},
+    http::{StatusCode, header::WWW_AUTHENTICATE, request::Parts},
 };
 use axum_extra::{
-    headers::{authorization::Basic, Authorization, HeaderMap, HeaderValue},
     TypedHeader,
+    headers::{Authorization, HeaderMap, HeaderValue, authorization::Basic},
 };
 use uuid::Uuid;
 
@@ -35,7 +34,6 @@ impl BasicUser {
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for BasicUser
 where
     S: Send + Sync,
@@ -65,7 +63,6 @@ where
 
 pub struct User(pub UserAccount);
 
-#[async_trait]
 impl<S> FromRequestParts<S> for User
 where
     S: Send + Sync,
@@ -83,11 +80,33 @@ where
     }
 }
 
+impl<S> axum::extract::OptionalFromRequestParts<S> for User
+where
+    S: Send + Sync,
+{
+    type Rejection = StatusTemplate;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        let Ok(user) = BasicUser::from_request_parts(parts, state).await else {
+            return Ok(None);
+        };
+        let repo = UserRepository::for_user(&user.username);
+
+        repo.load_info()
+            .await
+            .map(Self)
+            .map(Some)
+            .map_err(|_| INTERNAL_SERVER_ERROR)
+    }
+}
+
 pub struct BasicAuth {
     pub username: String,
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for BasicAuth
 where
     S: Send + Sync,

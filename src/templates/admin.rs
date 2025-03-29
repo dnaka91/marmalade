@@ -1,11 +1,12 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use rinja::Template;
+use askama::Template;
+use askama_web::WebTemplate;
 
 use crate::models::UserAccount;
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "admin/settings.html")]
 pub struct Settings {
     pub message: Option<ServerSettingsMessage>,

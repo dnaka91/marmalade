@@ -1,12 +1,13 @@
 use std::str::FromStr;
 
 use anyhow::bail;
+use askama::Template;
+use askama_web::WebTemplate;
 use camino::Utf8PathBuf;
-use rinja::Template;
 
 use crate::models::{FileKind, RepoFile, RepoTree, TreeKind, UserAccount, UserRepo};
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "repo/index.html")]
 pub struct Index {
     pub auth_user: Option<UserAccount>,
@@ -17,7 +18,7 @@ pub struct Index {
     pub readme: String,
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "repo/tree.html")]
 pub struct Tree {
     pub auth_user: Option<UserAccount>,
@@ -56,7 +57,7 @@ impl Tree {
     }
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "repo/create.html")]
 pub struct Create {
     pub error: Option<RepoCreateError>,
@@ -89,13 +90,13 @@ impl FromStr for RepoCreateError {
     }
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "repo/delete.html")]
 pub struct Delete {
     pub repo: String,
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "repo/settings.html")]
 pub struct Settings {
     pub message: Option<RepoSettingsMessage>,

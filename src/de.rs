@@ -11,7 +11,7 @@ where
 
 struct FormBoolVisitor;
 
-impl<'de> Visitor<'de> for FormBoolVisitor {
+impl Visitor<'_> for FormBoolVisitor {
     type Value = bool;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -40,7 +40,7 @@ where
 
 struct RepoNameVisitor;
 
-impl<'de> Visitor<'de> for RepoNameVisitor {
+impl Visitor<'_> for RepoNameVisitor {
     type Value = String;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

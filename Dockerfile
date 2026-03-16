@@ -19,7 +19,7 @@ RUN touch src/main.rs && cargo build --release --target x86_64-unknown-linux-mus
 
 FROM alpine:3
 
-RUN apk add --no-cache git && \
+RUN apk --no-cache add git && \
     addgroup -g 1000 marmalade && \
     adduser -u 1000 -G marmalade -D -g '' -H -h /dev/null -s /sbin/nologin marmalade
 
